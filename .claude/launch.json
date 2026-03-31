@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "TensorBoard (Training Monitor)",
+      "runtimeExecutable": "tensorboard",
+      "runtimeArgs": ["--logdir", "results/logs"],
+      "port": 6006
+    },
+    {
+      "name": "Random Agent Demo (Pygame)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "agents.random_agent"],
+      "port": 0
+    }
+  ]
+}
