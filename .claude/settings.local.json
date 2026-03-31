@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \":*)",
+      "Bash(python3 evaluation/generate_diagram.py)",
+      "Bash(find '/c/Users/LENOVO/Cloned repos/AstroLogic_beta' -type f -name *.json -o -name *.yaml -o -name *.yml -o -name requirements*.txt -o -name setup.py -o -name pyproject.toml -o -name *.ipynb)",
+      "Bash(ls -la \"/c/Users/LENOVO/Cloned repos/AstroLogic_beta\"/*.py)",
+      "Bash(find '/c/Users/LENOVO/Cloned repos/AstroLogic_beta' -maxdepth 3 -type f \\\\\\(-name *.ipynb -o -name *.md \\\\\\))",
+      "Bash(grep -r \"tensorboard\\\\|streamlit\\\\|flask\\\\|fastapi\\\\|django\\\\|http\\\\.server\\\\|uvicorn\\\\|port\" '/c/Users/LENOVO/Cloned repos/AstroLogic_beta' --include=*.py --include=*.md --include=*.txt)",
+      "Bash(grep -r \"5000\\\\|5001\\\\|5002\\\\|6006\\\\|8000\\\\|8888\\\\|3000\\\\|localhost\\\\|0.0.0.0\" '/c/Users/LENOVO/Cloned repos/AstroLogic_beta' --include=*.py --include=*.json)",
+      "Bash(grep -i \"tensorboard\\\\|server\\\\|port\" \"/c/Users/LENOVO/Cloned repos/AstroLogic_beta\"/*.py)",
+      "Bash(grep -r \"app\\\\.run\\\\|server\\\\.listen\\\\|create_app\\\\|@app\\\\|@main\\\\|if __name__\" '/c/Users/LENOVO/Cloned repos/AstroLogic_beta' --include=*.py)",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+gymnasium>=1.0.0
+stable-baselines3>=2.0.0
+torch>=2.0.0
+pygame>=2.1.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+tensorboard
+seaborn
+tqdm
+mlagents-envs>=0.28.0
