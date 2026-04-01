@@ -1,5 +1,6 @@
 """HUD overlay for the pygame renderer."""
 
+import numpy as np
 import pygame
 from visualization.colors import (
     HUD_GREEN, HUD_RED, HUD_BLUE, HUD_WHITE, HUD_YELLOW, HUD_GRAY,
@@ -103,7 +104,6 @@ class UIOverlay:
         x = self.sw - 280
         y = self.sh - 70
 
-        import numpy as np
         vel_mag = np.linalg.norm(vel)
         self._draw_label(surface, f"POS: ({pos[0]:.2f}, {pos[1]:.2f}, {pos[2]:.2f}) AU", x, y, HUD_GRAY)
         self._draw_label(surface, f"VEL: {vel_mag:.4f} AU/day", x, y + 18, HUD_GRAY)

@@ -7,6 +7,7 @@ on Mars, Europa, and Enceladus using various scientific instruments.
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
+from collections import deque
 
 from astro_env.celestial_bodies import CELESTIAL_BODIES, TARGET_BODIES, INSTRUMENTS
 from astro_env.physics import (
@@ -25,7 +26,7 @@ class AstroExplorationEnv(gym.Env):
     The agent controls a spacecraft starting from Earth, navigating through
     the solar system to detect and transmit biosignatures from target bodies.
 
-    Observation Space (23-dim continuous):
+    Observation Space (26-dim continuous):
         [0:3]   - Spacecraft position (x, y, z) in AU
         [3:6]   - Spacecraft velocity (vx, vy, vz)
         [6]     - Normalized distance to Mars
@@ -39,14 +40,18 @@ class AstroExplorationEnv(gym.Env):
         [20]    - SNR biosignature signal [0, 1]
         [21]    - Biosignatures found / 3
         [22]    - Biosignatures transmitted / 3
+        [23]    - Agent yaw normalized to [-1, 1]  (yaw / pi)
+        [24]    - Normalized distance to Sun [0, 1] (for battery recharge awareness)
+        [25]    - Active instrument index / 3 [0, 1]
 
-    Action Space (MultiDiscrete [5, 3, 3, 3, 4, 2]):
+    Action Space (MultiDiscrete [5, 3, 3, 4, 2]):
         [0] Thrust: {0, 0.25, 0.5, 0.75, 1.0}
         [1] Pitch:  {-5, 0, +5} degrees
         [2] Yaw:    {-5, 0, +5} degrees
-        [3] Roll:   {-5, 0, +5} degrees
-        [4] Instrument: {None, Spectrometer, ThermalImager, Drill}
-        [5] Communication: {Off, Transmit}
+        [3] Instrument: {None, Spectrometer, ThermalImager, Drill}
+        [4] Communication: {Off, Transmit}
+        Roll is omitted: orientation_to_direction() confirms roll has no effect
+        on the thrust forward vector, making it irrelevant to navigation.
     """
 
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
@@ -75,19 +80,22 @@ class AstroExplorationEnv(gym.Env):
         self.render_mode = render_mode
         self.max_episode_steps = max_episode_steps
 
-        # Observation space: 23-dimensional continuous
+        # Observation space: 26-dimensional continuous
         obs_low = np.array(
-            [-50, -50, -50,      # position
-             -10, -10, -10,      # velocity
-             0,                  # mars dist
-             -1, -1, -1,         # mars heading
-             0,                  # europa dist
-             -1, -1, -1,         # europa heading
-             0,                  # enceladus dist
-             -1, -1, -1,         # enceladus heading
-             0, 0,               # fuel, battery
-             0,                  # snr
-             0, 0],              # biosig found, transmitted
+            [-50, -50, -50,      # position [0:3]
+             -10, -10, -10,      # velocity [3:6]
+             0,                  # mars dist [6]
+             -1, -1, -1,         # mars heading [7:10]
+             0,                  # europa dist [10]
+             -1, -1, -1,         # europa heading [11:14]
+             0,                  # enceladus dist [14]
+             -1, -1, -1,         # enceladus heading [15:18]
+             0, 0,               # fuel, battery [18:20]
+             0,                  # snr [20]
+             0, 0,               # biosig found, transmitted [21:23]
+             -1,                 # yaw normalized [-1, 1] [23]
+             0,                  # sun dist normalized [0, 1] [24]
+             0],                 # active instrument / 3 [0, 1] [25]
             dtype=np.float32,
         )
         obs_high = np.array(
@@ -101,13 +109,17 @@ class AstroExplorationEnv(gym.Env):
              1, 1, 1,
              1, 1,
              1,
-             1, 1],
+             1, 1,
+             1,   # yaw high
+             1,   # sun dist high
+             1],  # active instrument high
             dtype=np.float32,
         )
         self.observation_space = spaces.Box(obs_low, obs_high, dtype=np.float32)
 
-        # Action space: MultiDiscrete [thrust, pitch, yaw, roll, instrument, comm]
-        self.action_space = spaces.MultiDiscrete([5, 3, 3, 3, 4, 2])
+        # Action space: MultiDiscrete [thrust, pitch, yaw, instrument, comm]
+        # Roll is excluded: it has no effect on the forward thrust direction.
+        self.action_space = spaces.MultiDiscrete([5, 3, 3, 4, 2])
 
         # Reward calculator
         self.reward_calculator = RewardCalculator()
@@ -129,6 +141,7 @@ class AstroExplorationEnv(gym.Env):
         self.body_positions = None
         self.cumulative_reward = None
         self.trajectory = None
+        self._last_thrust_level = 0.0
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -153,7 +166,7 @@ class AstroExplorationEnv(gym.Env):
         self.biosignatures_transmitted = set()
         self.active_instrument = 0
         self.cumulative_reward = 0.0
-        self.trajectory = [self.position.copy()]
+        self.trajectory = deque([self.position.copy()], maxlen=500)
 
         # Randomize initial orbital angles slightly
         if self.np_random is not None:
@@ -174,17 +187,16 @@ class AstroExplorationEnv(gym.Env):
         assert self.action_space.contains(action), f"Invalid action: {action}"
 
         # Decode sub-actions
-        thrust_idx, pitch_idx, yaw_idx, roll_idx, instrument_idx, comm_idx = action
+        thrust_idx, pitch_idx, yaw_idx, instrument_idx, comm_idx = action
         thrust_level = self.THRUST_LEVELS[thrust_idx]
+        self._last_thrust_level = thrust_level
         pitch_delta = np.radians(self.ROTATION_DELTAS[pitch_idx])
         yaw_delta = np.radians(self.ROTATION_DELTAS[yaw_idx])
-        roll_delta = np.radians(self.ROTATION_DELTAS[roll_idx])
         self.active_instrument = instrument_idx
 
-        # Update orientation
+        # Update orientation (pitch and yaw only; roll removed from action space)
         self.orientation[0] += pitch_delta
         self.orientation[1] += yaw_delta
-        self.orientation[2] += roll_delta
 
         # Apply thrust along forward direction
         fuel_used = 0.0
@@ -268,8 +280,6 @@ class AstroExplorationEnv(gym.Env):
 
         # Store trajectory for rendering
         self.trajectory.append(self.position.copy())
-        if len(self.trajectory) > 500:
-            self.trajectory.pop(0)
 
         obs = self._get_obs()
         info = self._get_info()
@@ -308,8 +318,8 @@ class AstroExplorationEnv(gym.Env):
                 )
 
     def _get_obs(self) -> np.ndarray:
-        """Build the 23-dimensional observation vector."""
-        obs = np.zeros(23, dtype=np.float32)
+        """Build the 26-dimensional observation vector."""
+        obs = np.zeros(26, dtype=np.float32)
 
         # Position and velocity
         obs[0:3] = self.position.astype(np.float32)
@@ -335,6 +345,16 @@ class AstroExplorationEnv(gym.Env):
         # Mission progress
         obs[21] = len(self.biosignatures_found) / self.BIOSIG_SUCCESS_COUNT
         obs[22] = len(self.biosignatures_transmitted) / self.BIOSIG_SUCCESS_COUNT
+
+        # Agent heading (yaw normalized to [-1, 1])
+        obs[23] = float(np.clip(self.orientation[1] / np.pi, -1.0, 1.0))
+
+        # Distance to Sun (normalized; signals when to steer back for battery recharge)
+        sun_dist = np.linalg.norm(self.position)
+        obs[24] = normalize_distance(sun_dist)
+
+        # Active instrument (normalized to [0, 1])
+        obs[25] = self.active_instrument / 3.0
 
         return obs
 
@@ -440,11 +460,11 @@ class AstroExplorationEnv(gym.Env):
             "biosig_found": list(self.biosignatures_found),
             "biosig_transmitted": list(self.biosignatures_transmitted),
             "body_positions": {k: v.copy() for k, v in self.body_positions.items()},
-            "trajectory": [p.copy() for p in self.trajectory],
+            "trajectory": list(self.trajectory),
             "current_step": self.current_step,
             "max_steps": self.max_episode_steps,
             "cumulative_reward": self.cumulative_reward,
-            "thrust_level": 0.0,  # Updated from last action
+            "thrust_level": self._last_thrust_level,
         }
 
     def close(self):

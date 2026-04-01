@@ -40,16 +40,35 @@ class PygameRenderer:
         self.clock = pygame.time.Clock()
         self.ui = UIOverlay(self.SCREEN_W, self.SCREEN_H)
 
-        # Generate static star field
-        self.stars = [
-            (np.random.randint(0, self.SCREEN_W), np.random.randint(0, self.SCREEN_H))
-            for _ in range(200)
-        ]
+        # Generate static star field with pre-computed brightness
+        self.stars = []
+        for _ in range(200):
+            x = np.random.randint(0, self.SCREEN_W)
+            y = np.random.randint(0, self.SCREEN_H)
+            b = np.random.randint(150, 255)
+            self.stars.append((x, y, (b, b, min(b + 10, 255))))
 
         # Camera state
         self.camera_x = 0.0
         self.camera_y = 0.0
         self.scale = self.BASE_SCALE
+        self._target_scale = self.BASE_SCALE
+
+        # Cached font for body labels
+        self._label_font = pygame.font.SysFont("consolas", 11)
+
+        # Cache for biosignature zone surfaces keyed by (name, radius_px)
+        self._zone_surface_cache = {}
+
+        # Pre-computed trajectory color lookup table (index = alpha 0-255)
+        self._traj_colors = [
+            (
+                min(255, TRAJECTORY_WHITE[0] * i // 255),
+                min(255, TRAJECTORY_WHITE[1] * i // 255),
+                min(255, TRAJECTORY_WHITE[2] * i // 255),
+            )
+            for i in range(256)
+        ]
 
     def render_frame(self, state: dict):
         """Render one frame. Returns the surface as rgb_array if needed."""
@@ -106,15 +125,16 @@ class PygameRenderer:
         # Scale so the nearest target fits in ~60% of screen
         if min_dist > 0.1:
             desired_scale = (self.SCREEN_W * 0.3) / min_dist
-            self.scale = np.clip(desired_scale, self.MIN_SCALE, self.MAX_SCALE)
+            self._target_scale = np.clip(desired_scale, self.MIN_SCALE, self.MAX_SCALE)
         else:
-            self.scale = self.MAX_SCALE
+            self._target_scale = self.MAX_SCALE
+        # Smooth lerp toward target scale to avoid jarring zoom jumps
+        self.scale += (self._target_scale - self.scale) * 0.1
 
     def _draw_stars(self):
         """Draw static star background."""
-        for sx, sy in self.stars:
-            brightness = np.random.randint(150, 255)
-            self.screen.set_at((sx, sy), (brightness, brightness, min(brightness + 10, 255)))
+        for sx, sy, color in self.stars:
+            self.screen.set_at((sx, sy), color)
 
     def _draw_orbital_paths(self, state):
         """Draw orbital path circles for planets."""
@@ -124,10 +144,12 @@ class PygameRenderer:
             if body["parent"] == "Sun" and body["orbit_radius"] > 0:
                 radius_px = int(body["orbit_radius"] * self.scale)
                 if 2 < radius_px < 2000:
-                    pygame.draw.circle(
-                        self.screen, ORBIT_PATH,
-                        (sun_sx, sun_sy), radius_px, 1
-                    )
+                    if (sun_sx + radius_px >= 0 and sun_sx - radius_px < self.SCREEN_W
+                            and sun_sy + radius_px >= 0 and sun_sy - radius_px < self.SCREEN_H):
+                        pygame.draw.circle(
+                            self.screen, ORBIT_PATH,
+                            (sun_sx, sun_sy), radius_px, 1
+                        )
 
     def _draw_biosignature_zones(self, state):
         """Draw semi-transparent biosignature detection zones."""
@@ -153,16 +175,13 @@ class PygameRenderer:
             else:
                 zone_color = BIOSIG_ZONE_ORGANIC
 
-            # Draw semi-transparent circle
-            zone_surface = pygame.Surface((radius_px * 2, radius_px * 2), pygame.SRCALPHA)
-            pygame.draw.circle(
-                zone_surface, zone_color,
-                (radius_px, radius_px), radius_px
-            )
-            self.screen.blit(
-                zone_surface,
-                (sx - radius_px, sy - radius_px)
-            )
+            # Draw semi-transparent circle (cached by name + radius to avoid per-frame alloc)
+            cache_key = (target, radius_px)
+            if cache_key not in self._zone_surface_cache:
+                surf = pygame.Surface((radius_px * 2, radius_px * 2), pygame.SRCALPHA)
+                pygame.draw.circle(surf, zone_color, (radius_px, radius_px), radius_px)
+                self._zone_surface_cache[cache_key] = surf
+            self.screen.blit(self._zone_surface_cache[cache_key], (sx - radius_px, sy - radius_px))
 
     def _draw_celestial_bodies(self, state):
         """Draw all celestial bodies."""
@@ -210,8 +229,7 @@ class PygameRenderer:
                 pygame.draw.circle(self.screen, color, (sx, sy), visual_r)
 
                 # Label
-                font = pygame.font.SysFont("consolas", 11)
-                label = font.render(name, True, HUD_WHITE)
+                label = self._label_font.render(name, True, HUD_WHITE)
                 self.screen.blit(label, (sx + visual_r + 3, sy - 6))
 
     def _draw_trajectory(self, state):
@@ -225,15 +243,11 @@ class PygameRenderer:
             sx, sy = self._world_to_screen(pos[0], pos[1])
             points.append((sx, sy))
 
-        # Draw with fading alpha
-        for i in range(1, len(points)):
-            alpha = int(255 * i / len(points))
-            color = (
-                min(255, TRAJECTORY_WHITE[0] * alpha // 255),
-                min(255, TRAJECTORY_WHITE[1] * alpha // 255),
-                min(255, TRAJECTORY_WHITE[2] * alpha // 255),
-            )
-            pygame.draw.line(self.screen, color, points[i - 1], points[i], 1)
+        # Draw with fading alpha using pre-computed color LUT
+        n = len(points)
+        for i in range(1, n):
+            alpha = int(255 * i / n)
+            pygame.draw.line(self.screen, self._traj_colors[alpha], points[i - 1], points[i], 1)
 
     def _draw_spacecraft(self, state):
         """Draw the spacecraft as a triangle with thrust indicator."""
