@@ -4,12 +4,12 @@
 """
 
 # Total training timesteps for SB3 algorithms
-TOTAL_TIMESTEPS = 500_000
-EVAL_FREQ = 10_000
+TOTAL_TIMESTEPS = 100_000  # Reduced from 500k for faster exploration training
+EVAL_FREQ = 5_000
 N_EVAL_EPISODES = 5
 
 # REINFORCE training episodes
-REINFORCE_EPISODES = 5000
+REINFORCE_EPISODES = 1000  # Reduced for faster experimentation
 
 # ============================================================
 # Shared DQN environment kwargs
@@ -22,17 +22,24 @@ _DQN_ENV_KWARGS = {
     "enable_curriculum": True,
     "success_count": 1,
     "detection_zone_scale": 2.0,
+    "initial_fuel": 3000.0,  # Increased fuel for longer exploration
+    "initial_battery": 1500.0,  # Increased battery
+    "fuel_consumption_rate": 0.8,  # Slower fuel consumption
     "reward_kwargs": {
         "step_fuel_penalty": 0.001,
         "step_time_penalty": 0.0001,
         "direction_bonus_scale": 4.0,
-        "moving_away_penalty": 0.05,
+        "moving_away_penalty": 0.01,  # REDUCED from 0.05 - encourage exploration away from Earth
         "compatible_instrument_bonus": 8.0,
         "in_zone_hold_bonus": 2.0,
         "proximity_scale": 1.0,
         "transmission_bonus": 600.0,
         "success_completion_bonus": 2000.0,
         "collision_penalty": -80.0,
+        # NEW: Exploration bonuses
+        "distance_bonus_scale": 10.0,  # Reward for distance from Earth
+        "new_planet_visited_bonus": 500.0,  # Bonus for visiting Mars, Europa, etc.
+        "energy_efficiency_bonus": 50.0,  # Bonus for low fuel consumption
     },
 }
 
@@ -209,8 +216,12 @@ DQN_CONFIGS = [
 
 # ============================================================
 # PPO Configurations (10 runs)
-# Baseline: lr=3e-4, n_steps=2048, batch=64, n_epochs=10,
-#           clip=0.2, ent=0.01, gamma=0.99, net=[256,256]
+# All runs share the same rebalanced reward & environment settings as DQN:
+# - success_count=1: only need 1 biosignature detected to win
+# - detection_zone_scale=2.0: larger target zones
+# - enable_curriculum=True: progressive difficulty
+# - reward_kwargs: balanced so +2000 success > -80 collision
+# PPO parameters vary: lr, n_steps (rollout), batch, clipping, entropy
 # ============================================================
 PPO_CONFIGS = [
     {   # Run 0: Baseline
@@ -222,12 +233,13 @@ PPO_CONFIGS = [
         "clip_range": 0.2,
         "ent_coef": 0.01,
         "vf_coef": 0.5,
-        "gamma": 0.99,
+        "gamma": 0.995,
         "gae_lambda": 0.95,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [256, 256]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
-    {   # Run 1: Higher entropy
+    {   # Run 1: Higher entropy (wider exploration)
         "name": "ppo_high_entropy",
         "learning_rate": 3e-4,
         "n_steps": 2048,
@@ -236,66 +248,71 @@ PPO_CONFIGS = [
         "clip_range": 0.2,
         "ent_coef": 0.05,
         "vf_coef": 0.5,
-        "gamma": 0.99,
+        "gamma": 0.995,
         "gae_lambda": 0.95,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [256, 256]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
     {   # Run 2: Lower learning rate
         "name": "ppo_low_lr",
-        "learning_rate": 1e-4,
+        "learning_rate": 1.5e-4,
         "n_steps": 2048,
         "batch_size": 64,
         "n_epochs": 10,
         "clip_range": 0.2,
         "ent_coef": 0.01,
         "vf_coef": 0.5,
-        "gamma": 0.99,
+        "gamma": 0.995,
         "gae_lambda": 0.95,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [256, 256]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
-    {   # Run 3: Tighter clipping
+    {   # Run 3: Tighter clipping (safer policy updates)
         "name": "ppo_tight_clip",
-        "learning_rate": 3e-4,
+        "learning_rate": 2e-4,
         "n_steps": 2048,
-        "batch_size": 64,
+        "batch_size": 128,
         "n_epochs": 10,
-        "clip_range": 0.1,
+        "clip_range": 0.15,
         "ent_coef": 0.01,
         "vf_coef": 0.5,
-        "gamma": 0.99,
+        "gamma": 0.995,
         "gae_lambda": 0.95,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [256, 256]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
-    {   # Run 4: Wider clipping
+    {   # Run 4: Wider clipping (bolder updates)
         "name": "ppo_wide_clip",
-        "learning_rate": 3e-4,
+        "learning_rate": 2e-4,
         "n_steps": 2048,
-        "batch_size": 64,
+        "batch_size": 128,
         "n_epochs": 10,
         "clip_range": 0.3,
         "ent_coef": 0.01,
         "vf_coef": 0.5,
-        "gamma": 0.99,
+        "gamma": 0.995,
         "gae_lambda": 0.95,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [256, 256]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
-    {   # Run 5: More epochs
+    {   # Run 5: More epochs (exploit rollouts more)
         "name": "ppo_more_epochs",
-        "learning_rate": 3e-4,
+        "learning_rate": 2e-4,
         "n_steps": 2048,
-        "batch_size": 64,
-        "n_epochs": 20,
+        "batch_size": 128,
+        "n_epochs": 15,
         "clip_range": 0.2,
-        "ent_coef": 0.01,
-        "vf_coef": 0.5,
-        "gamma": 0.99,
-        "gae_lambda": 0.95,
+        "ent_coef": 0.015,
+        "vf_coef": 0.6,
+        "gamma": 0.995,
+        "gae_lambda": 0.97,
         "max_grad_norm": 0.5,
-        "policy_kwargs": {"net_arch": [256, 256]},
+        "policy_kwargs": {"net_arch": [256, 256, 128]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
     {   # Run 6: Smaller network
         "name": "ppo_small_net",
@@ -306,26 +323,28 @@ PPO_CONFIGS = [
         "clip_range": 0.2,
         "ent_coef": 0.01,
         "vf_coef": 0.5,
-        "gamma": 0.99,
+        "gamma": 0.995,
         "gae_lambda": 0.95,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [128, 128]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
-    {   # Run 7: Larger rollout + batch
+    {   # Run 7: Larger rollout (longer trajectory collection)
         "name": "ppo_large_rollout",
-        "learning_rate": 3e-4,
+        "learning_rate": 2e-4,
         "n_steps": 4096,
-        "batch_size": 128,
+        "batch_size": 256,
         "n_epochs": 10,
         "clip_range": 0.2,
-        "ent_coef": 0.01,
-        "vf_coef": 0.5,
-        "gamma": 0.99,
-        "gae_lambda": 0.95,
+        "ent_coef": 0.015,
+        "vf_coef": 0.6,
+        "gamma": 0.995,
+        "gae_lambda": 0.97,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [256, 256]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
-    {   # Run 8: Lower gamma
+    {   # Run 8: Lower gamma (prioritise near-term)
         "name": "ppo_low_gamma",
         "learning_rate": 3e-4,
         "n_steps": 2048,
@@ -338,6 +357,7 @@ PPO_CONFIGS = [
         "gae_lambda": 0.95,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [256, 256]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
     {   # Run 9: Higher lr + deeper network
         "name": "ppo_high_lr_deep",
@@ -348,10 +368,11 @@ PPO_CONFIGS = [
         "clip_range": 0.2,
         "ent_coef": 0.01,
         "vf_coef": 0.5,
-        "gamma": 0.99,
+        "gamma": 0.995,
         "gae_lambda": 0.95,
         "max_grad_norm": 0.5,
         "policy_kwargs": {"net_arch": [256, 256, 128]},
+        "env_kwargs": _DQN_ENV_KWARGS,
     },
 ]
 

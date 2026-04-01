@@ -40,6 +40,8 @@ def evaluate_sb3_model(model_path: str, algorithm: str, n_episodes: int = 10,
         while not done:
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, terminated, truncated, info = env.step(action)
+            if render:
+                env.render()
             total_reward += reward
             steps += 1
             done = terminated or truncated
@@ -87,6 +89,8 @@ def evaluate_reinforce_model(model_path: str, n_episodes: int = 10,
                 obs_tensor = torch.FloatTensor(obs)
                 action, _ = policy.get_action(obs_tensor)
             obs, reward, terminated, truncated, info = env.step(action)
+            if render:
+                env.render()
             total_reward += reward
             steps += 1
             done = terminated or truncated
