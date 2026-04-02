@@ -44,8 +44,8 @@ _REWARD_KWARGS = {
     "collision_penalty": -100.0,
     "orbital_insertion_bonus": 100.0,
     "transmission_bonus": 200.0,
-    "approach_scale": 200.0,
-    "heading_scale": 0.5,
+    "approach_scale": 5.0,
+    "heading_scale": 1.5,
 }
 
 _NON_MODEL_KEYS = {"name", "reward_kwargs", "use_per", "per_alpha", "per_beta"}

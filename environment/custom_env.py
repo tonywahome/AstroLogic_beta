@@ -167,8 +167,8 @@ def compute_heading(from_pos, to_pos):
 class RewardCalculator:
     def __init__(self, step_fuel_penalty=0.001, step_time_penalty=0.0001,
                  collision_penalty=-100.0, orbital_insertion_bonus=100.0,
-                 transmission_bonus=200.0, approach_scale=200.0,
-                 heading_scale=0.5):
+                 transmission_bonus=200.0, approach_scale=5.0,
+                 heading_scale=1.5):
         self.step_fuel_penalty = step_fuel_penalty
         self.step_time_penalty = step_time_penalty
         self.collision_penalty = collision_penalty
