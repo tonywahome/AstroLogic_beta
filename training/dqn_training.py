@@ -7,11 +7,16 @@ High-reward exploitation strategy:
     learn more from rare positive outcomes and forget ineffective transitions.
 """
 
-import os, csv, time
+import os, csv, time, sys
 import gymnasium as gym
 from stable_baselines3 import DQN
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import EvalCallback, BaseCallback
+
+# Ensure imports work when running this script from inside the training folder.
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 import environment  # noqa: F401  — registers AstroExploration-v0
 from environment.custom_env import FlattenMultiDiscreteToDiscrete
@@ -26,7 +31,7 @@ except ImportError:
 # ============================================================
 # Training constants
 # ============================================================
-TOTAL_TIMESTEPS = 100_000
+TOTAL_TIMESTEPS = 500_000
 EVAL_FREQ = 5_000
 N_EVAL_EPISODES = 5
 

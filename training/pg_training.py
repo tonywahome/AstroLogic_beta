@@ -10,7 +10,7 @@ High-reward exploitation strategies:
     below baseline produce negative gradients.
 """
 
-import os, csv, time
+import os, csv, time, sys
 import numpy as np
 import torch
 import torch.nn as nn
@@ -20,6 +20,9 @@ import gymnasium as gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import EvalCallback, BaseCallback
+
+# Add parent directory to path so we can import environment
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import environment  # noqa: F401  — registers AstroExploration-v0
 

@@ -46,6 +46,7 @@ def run_episodes(algorithm, model_path, n_episodes=3):
             while not done:
                 action, _ = model.predict(obs, deterministic=True)
                 obs, reward, terminated, truncated, info = wrapped.step(action)
+                wrapped.render()
                 total_reward += reward
                 done = terminated or truncated
             print(f"Episode {ep+1}: reward={total_reward:.2f}")
@@ -61,6 +62,7 @@ def run_episodes(algorithm, model_path, n_episodes=3):
             while not done:
                 action, _ = model.predict(obs, deterministic=True)
                 obs, reward, terminated, truncated, info = env.step(action)
+                env.render()
                 total_reward += reward
                 done = terminated or truncated
             print(f"Episode {ep+1}: reward={total_reward:.2f}")
@@ -83,6 +85,7 @@ def run_episodes(algorithm, model_path, n_episodes=3):
                     obs_t = torch.FloatTensor(obs)
                     action, _ = policy.get_action(obs_t)
                 obs, reward, terminated, truncated, info = env.step(action)
+                env.render()
                 total_reward += reward
                 done = terminated or truncated
             print(f"Episode {ep+1}: reward={total_reward:.2f}")
