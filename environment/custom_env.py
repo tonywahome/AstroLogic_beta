@@ -165,15 +165,17 @@ def compute_heading(from_pos, to_pos):
 # ============================================================
 
 class RewardCalculator:
-    def __init__(self, step_fuel_penalty=0.01, step_time_penalty=0.001,
-                 collision_penalty=-1000.0, orbital_insertion_bonus=100.0,
-                 transmission_bonus=50.0, proximity_scale=0.1):
+    def __init__(self, step_fuel_penalty=0.001, step_time_penalty=0.0001,
+                 collision_penalty=-100.0, orbital_insertion_bonus=100.0,
+                 transmission_bonus=200.0, approach_scale=200.0,
+                 heading_scale=0.5):
         self.step_fuel_penalty = step_fuel_penalty
         self.step_time_penalty = step_time_penalty
         self.collision_penalty = collision_penalty
         self.orbital_insertion_bonus = orbital_insertion_bonus
         self.transmission_bonus = transmission_bonus
-        self.proximity_scale = proximity_scale
+        self.approach_scale = approach_scale
+        self.heading_scale = heading_scale
 
     def compute(self, state):
         info = {}
@@ -202,12 +204,15 @@ class RewardCalculator:
             info["reward_collision"] = self.collision_penalty
             total += self.collision_penalty
 
-        min_dist = state.get("min_target_distance", 50.0)
-        if min_dist < 5.0:
-            proximity_reward = self.proximity_scale * (1.0 / (min_dist + 0.1) - 1.0 / 5.1)
-            proximity_reward = max(0.0, proximity_reward)
-            info["reward_proximity"] = proximity_reward
-            total += proximity_reward
+        approach_delta = state.get("approach_delta", 0.0)
+        approach_reward = max(0.0, approach_delta) * self.approach_scale
+        info["reward_approach"] = approach_reward
+        total += approach_reward
+
+        heading_alignment = state.get("heading_alignment", 0.0)
+        heading_reward = max(0.0, heading_alignment) * self.heading_scale
+        info["reward_heading"] = heading_reward
+        total += heading_reward
 
         info["reward_total"] = total
         return total, info
@@ -371,6 +376,10 @@ class AstroExplorationEnv(gym.Env):
         yaw_delta = np.radians(self.ROTATION_DELTAS[yaw_idx])
         self.active_instrument = instrument_idx
 
+        # Capture pre-update state for reward shaping signals
+        prev_min_dist = self._min_target_distance()
+        prev_orientation = self.orientation.copy()
+
         self.orientation[0] += pitch_delta
         self.orientation[1] += yaw_delta
 
@@ -427,6 +436,22 @@ class AstroExplorationEnv(gym.Env):
 
         min_target_dist = self._min_target_distance()
 
+        # Reward shaping signals
+        approach_delta = prev_min_dist - min_target_dist
+
+        nearest_target_pos = np.zeros(3)
+        nearest_dist = float("inf")
+        for _tname in TARGET_BODIES:
+            _tpos = self.body_positions.get(_tname, np.zeros(3))
+            _tdist = np.linalg.norm(_tpos - self.position)
+            if _tdist < nearest_dist:
+                nearest_dist = _tdist
+                nearest_target_pos = _tpos
+
+        forward_direction = orientation_to_direction(*prev_orientation)
+        heading_to_nearest = compute_heading(self.position, nearest_target_pos)
+        heading_alignment = float(np.dot(forward_direction, heading_to_nearest))
+
         reward_state = {
             "fuel_used": fuel_used,
             "collision": collision,
@@ -435,6 +460,8 @@ class AstroExplorationEnv(gym.Env):
             "new_transmissions": new_transmissions,
             "orbital_insertion": orbital_insertion,
             "min_target_distance": min_target_dist,
+            "approach_delta": approach_delta,
+            "heading_alignment": heading_alignment,
         }
         reward, reward_info = self.reward_calculator.compute(reward_state)
         self.cumulative_reward += reward

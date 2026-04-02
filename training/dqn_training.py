@@ -35,8 +35,8 @@ TOTAL_TIMESTEPS = 500_000
 EVAL_FREQ = 5_000
 N_EVAL_EPISODES = 5
 
-# Shared reward rebalance: softer collision penalty, stronger proximity
-# guidance and transmission incentive.  All 10 DQN runs use the same reward
+# Shared reward rebalance: delta-based approach and heading alignment rewards
+# replace the static proximity signal.  All 10 DQN runs use the same reward
 # so comparisons across hyperparams are fair.
 _REWARD_KWARGS = {
     "step_fuel_penalty": 0.001,
@@ -44,7 +44,8 @@ _REWARD_KWARGS = {
     "collision_penalty": -100.0,
     "orbital_insertion_bonus": 100.0,
     "transmission_bonus": 200.0,
-    "proximity_scale": 0.5,
+    "approach_scale": 200.0,
+    "heading_scale": 0.5,
 }
 
 _NON_MODEL_KEYS = {"name", "reward_kwargs", "use_per", "per_alpha", "per_beta"}
