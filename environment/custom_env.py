@@ -303,7 +303,7 @@ class AstroExplorationEnv(gym.Env):
     BIOSIG_SUCCESS_COUNT = 3
     MAX_DISTANCE = 50.0
 
-    def __init__(self, render_mode=None, max_episode_steps=100_000,
+    def __init__(self, render_mode=None, max_episode_steps=10_000,
                  reward_kwargs=None):
         super().__init__()
         self.render_mode = render_mode

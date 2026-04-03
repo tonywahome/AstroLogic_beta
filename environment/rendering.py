@@ -109,7 +109,7 @@ class UIOverlay:
 
     def _draw_mission_info(self, surface, state):
         step = state.get("current_step", 0)
-        max_steps = state.get("max_steps", 100000)
+        max_steps = state.get("max_steps", 10000)
         reward = state.get("cumulative_reward", 0.0)
         x, y = self.sw // 2 - 100, self.sh - 50
         self._draw_label(surface, f"Step: {step:,} / {max_steps:,}", x, y, HUD_WHITE)
