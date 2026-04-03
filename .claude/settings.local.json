@@ -16,7 +16,16 @@
       "Bash(find C:/Users/LENOVO/Desktop/summative_rl/AstroLogic_beta -name *training_process* -o -name *process* -type f)",
       "Bash(python -c \"import environment; import gymnasium as gym; env = gym.make\\(''AstroExploration-v0''\\); print\\(''Obs space:'', env.observation_space\\); print\\(''Obs shape:'', env.observation_space.shape\\); print\\(''Act space:'', env.action_space\\); print\\(''Act nvec:'', env.action_space.nvec\\); obs, info = env.reset\\(\\); print\\(''Obs sample shape:'', obs.shape\\); env.close\\(\\); print\\(''OK''\\)\")",
       "Bash(python -c \"from training.dqn_training import DQN_CONFIGS; from training.pg_training import PPO_CONFIGS, REINFORCE_CONFIGS; print\\(''DQN:'', len\\(DQN_CONFIGS\\)\\); print\\(''PPO:'', len\\(PPO_CONFIGS\\)\\); print\\(''REINFORCE:'', len\\(REINFORCE_CONFIGS\\)\\); print\\(''Total:'', len\\(DQN_CONFIGS\\)+len\\(PPO_CONFIGS\\)+len\\(REINFORCE_CONFIGS\\)\\)\")",
-      "Bash(python -c \"from environment.custom_env import FlattenMultiDiscreteToDiscrete; import gymnasium as gym; import environment; env = gym.make\\(''AstroExploration-v0''\\); wrapped = FlattenMultiDiscreteToDiscrete\\(env\\); print\\(''Wrapped action space:'', wrapped.action_space\\); print\\(''n ='', wrapped.action_space.n\\); wrapped.close\\(\\); print\\(''DQN wrapper OK''\\)\")"
+      "Bash(python -c \"from environment.custom_env import FlattenMultiDiscreteToDiscrete; import gymnasium as gym; import environment; env = gym.make\\(''AstroExploration-v0''\\); wrapped = FlattenMultiDiscreteToDiscrete\\(env\\); print\\(''Wrapped action space:'', wrapped.action_space\\); print\\(''n ='', wrapped.action_space.n\\); wrapped.close\\(\\); print\\(''DQN wrapper OK''\\)\")",
+      "Bash(node -e \"require\\(''''docx''''\\)\")",
+      "Bash(npm list:*)",
+      "Bash(npm install:*)",
+      "Bash(node generate_report.js)",
+      "Bash(node -e \"console.log\\(require.resolve.paths\\(''''docx''''\\)\\)\")",
+      "Bash(python \"C:\\\\Users\\\\LENOVO\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\32e060f9-cb73-4e86-ad1f-6f1635059942\\\\1539f1fb-8c68-4cba-9e0d-cbb8bbd110fc\\\\skills\\\\docx\\\\scripts\\\\office\\\\validate.py\" AstroLogic_Report.docx)",
+      "Bash(python \"C:\\\\Users\\\\LENOVO\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\32e060f9-cb73-4e86-ad1f-6f1635059942\\\\1539f1fb-8c68-4cba-9e0d-cbb8bbd110fc\\\\skills\\\\docx\\\\scripts\\\\office\\\\validate.py\" \"C:\\\\Users\\\\LENOVO\\\\Desktop\\\\summative_rl\\\\AstroLogic_beta\\\\AstroLogic_Report.docx\")",
+      "Bash(python -c \"import os; [print\\(f\\) for f in os.walk\\(r''''C:\\\\tmp\\\\report_unpacked''''\\)]\")",
+      "Bash(python -c \":*)"
     ]
   }
 }

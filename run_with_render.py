@@ -12,9 +12,9 @@ import numpy as np
 import gymnasium as gym
 import torch
 from stable_baselines3 import DQN, PPO
-from astro_env.wrappers import FlattenMultiDiscreteToDiscrete
 from agents.reinforce_policy import REINFORCEPolicy
-import astro_env  # noqa: F401
+import environment  # noqa: F401
+from environment.custom_env import FlattenMultiDiscreteToDiscrete
 
 
 def run_sb3_model(model_path: str, algorithm: str, n_episodes: int = 5):

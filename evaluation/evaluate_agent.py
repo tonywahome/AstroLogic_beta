@@ -8,12 +8,12 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
-import astro_env  # noqa: F401
 import gymnasium as gym
 import torch
 from stable_baselines3 import DQN, PPO
-from astro_env.wrappers import FlattenMultiDiscreteToDiscrete
 from agents.reinforce_policy import REINFORCEPolicy
+import environment  # noqa: F401
+from environment.custom_env import FlattenMultiDiscreteToDiscrete
 
 
 def evaluate_sb3_model(model_path: str, algorithm: str, n_episodes: int = 10,
