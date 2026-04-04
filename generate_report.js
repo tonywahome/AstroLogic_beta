@@ -211,19 +211,19 @@ function pb() { return new Paragraph({ children: [new PageBreak()] }); }
 //  DATA
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const dqnHeaders  = ["Run Name", "Learning Rate", "Gamma", "Replay Buffer", "Batch Size", "Exploration (start\u2192end)", "Mean Reward"];
+const dqnHeaders  = ["Run Name", "Learning Rate", "Gamma", "Replay Buffer", "Batch Size", "Exploration (start\u2192end)", "Mean Reward (last 20)"];
 const dqnColW     = [1800, 1100, 800, 1100, 900, 1500, 1026];
 const dqnRows = [
-  ["dqn_baseline",       "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221249.37"],
-  ["dqn_small_net",      "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221252.10"],
-  ["dqn_high_lr",        "5e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221251.80"],
-  ["dqn_low_lr",         "1e-5",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221255.30"],
-  ["dqn_large_buffer",   "1e-4",  "0.995", "300,000", "128", "0.65 \u2192 0.02", "\u221247.60"],
-  ["dqn_soft_update",    "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221253.20"],
-  ["dqn_low_gamma",      "1e-4",  "0.950", "100,000", "64",  "0.65 \u2192 0.05", "\u221258.90"],
-  ["dqn_deep_net",       "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221250.40"],
-  ["dqn_med_lr_batch",   "3e-4",  "0.995", "200,000", "256", "0.60 \u2192 0.05", "\u221248.20"],
-  ["dqn_long_explore",   "1e-4",  "0.995", "100,000", "64",  "0.75 \u2192 0.01", "\u221246.90"],
+  ["dqn_baseline",       "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221287.89"],
+  ["dqn_small_net",      "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221275.32"],
+  ["dqn_high_lr",        "5e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221263.76"],
+  ["dqn_low_lr",         "1e-5",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221254.48"],
+  ["dqn_large_buffer",   "1e-4",  "0.995", "300,000", "128", "0.65 \u2192 0.02", "\u221253.03"],
+  ["dqn_soft_update",    "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221268.34"],
+  ["dqn_low_gamma",      "1e-4",  "0.950", "100,000", "64",  "0.65 \u2192 0.05", "\u221274.13"],
+  ["dqn_deep_net",       "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221275.81"],
+  ["dqn_med_lr_batch",   "3e-4",  "0.995", "200,000", "256", "0.60 \u2192 0.05", "\u221272.86"],
+  ["dqn_long_explore",   "1e-4",  "0.995", "100,000", "64",  "0.75 \u2192 0.01", "\u221276.08"],
 ];
 
 const rfHeaders  = ["Run Name", "Learning Rate", "Gamma", "Hidden Layers", "Baseline Strategy", "Mean Reward"];
@@ -241,19 +241,19 @@ const rfRows = [
   ["reinforce_running_baseline","3e-4",  "0.99", "[128, 64]",      "Running EMA",      "\u221280.10"],
 ];
 
-const ppoHeaders = ["Run Name", "Learning Rate", "Clip \u03B5", "Entropy Coef", "n_steps", "Batch Size", "Mean Reward"];
+const ppoHeaders = ["Run Name", "Learning Rate", "Clip \u03B5", "Entropy Coef", "n_steps", "Batch Size", "Mean Reward (last 20)"];
 const ppoColW    = [1700, 1100, 900, 1100, 900, 1000, 1026];
 const ppoRows = [
-  ["ppo_baseline",       "3e-4",   "0.20", "0.01", "2048", "64",  "\u221254.55"],
-  ["ppo_high_entropy",   "3e-4",   "0.20", "0.05", "2048", "64",  "\u221262.10"],
-  ["ppo_low_lr",         "1.5e-4", "0.20", "0.01", "2048", "64",  "\u221258.30"],
-  ["ppo_tight_clip",     "3e-4",   "0.15", "0.01", "2048", "128", "\u221256.70"],
-  ["ppo_wide_clip",      "3e-4",   "0.30", "0.01", "2048", "128", "\u221253.10"],
-  ["ppo_more_epochs",    "3e-4",   "0.20", "0.01", "2048", "64",  "\u221251.80"],
-  ["ppo_small_net",      "3e-4",   "0.20", "0.01", "2048", "64",  "\u221260.40"],
-  ["ppo_large_rollout",  "3e-4",   "0.20", "0.01", "4096", "256", "\u221249.70"],
-  ["ppo_low_gamma",      "3e-4",   "0.20", "0.01", "2048", "64",  "\u221263.80"],
-  ["ppo_high_lr_deep",   "5e-4",   "0.20", "0.01", "2048", "64",  "\u221257.20"],
+  ["ppo_baseline",       "3e-4",   "0.20", "0.01", "2048", "64",  "+334.86"],
+  ["ppo_high_entropy",   "3e-4",   "0.20", "0.05", "2048", "64",  "+240.19"],
+  ["ppo_low_lr",         "1.5e-4", "0.20", "0.01", "2048", "64",  "+354.82"],
+  ["ppo_tight_clip",     "3e-4",   "0.15", "0.01", "2048", "128", "+497.85"],
+  ["ppo_wide_clip",      "3e-4",   "0.30", "0.01", "2048", "128", "+578.81"],
+  ["ppo_more_epochs",    "3e-4",   "0.20", "0.01", "2048", "64",  "+211.71"],
+  ["ppo_small_net",      "3e-4",   "0.20", "0.01", "2048", "64",  "+298.49"],
+  ["ppo_large_rollout",  "3e-4",   "0.20", "0.01", "4096", "256", "+377.55"],
+  ["ppo_low_gamma",      "3e-4",   "0.20", "0.01", "2048", "64",  "+356.34"],
+  ["ppo_high_lr_deep",   "5e-4",   "0.20", "0.01", "2048", "64",  "+192.08"],
 ];
 
 // Observation space rows
@@ -508,28 +508,29 @@ children.push(
   pEmpty(),
   p("Key findings from DQN experiments:"),
   bullet(
-    "Extended exploration (dqn_long_explore, \u03B5 0.75\u21920.01) achieves the best mean reward (\u221246.9), " +
-    "indicating that thorough coverage of the 360-action space is critical.",
+    "dqn_large_buffer achieves the best last-20 mean reward (\u221253.03), benefiting from the 300k " +
+    "replay buffer and tighter \u03B5-end (0.02) which sustains diversity of experience and suppresses " +
+    "priority collapse in PER.",
     ""
   ),
   bullet(
-    "A high learning rate (5e-4) causes instability and only marginal improvement over the low-lr variant, " +
-    "consistent with the tendency of DQN to diverge with large updates.",
+    "dqn_low_lr (\u221254.48) is the second-best; a small learning rate (1e-5) allows more careful " +
+    "Q-value updates that avoid oscillating around high-TD-error transitions.",
     ""
   ),
   bullet(
-    "Larger buffer (dqn_large_buffer, 300k) improves performance slightly (\u221247.6 vs \u221249.4), " +
-    "as diverse experience helps PER avoid local priority collapse.",
+    "High learning rate (dqn_high_lr, \u221263.76) outperforms the baseline (\u221287.89 \u2014 only 8 " +
+    "evaluation episodes logged) but shows instability; the fast-moving Q-targets impair convergence.",
     ""
   ),
   bullet(
-    "Soft target updates (\u03C4=0.005) yield slightly lower performance than hard copies in this " +
-    "environment, suggesting the environment rewards more aggressive Q-value tracking.",
+    "Soft target updates (dqn_soft_update, \u221268.34) perform worse than most hard-copy runs, " +
+    "suggesting the environment\u2019s sparse rewards benefit from faster Q-target propagation.",
     ""
   ),
   bullet(
-    "Reducing \u03B3 from 0.995 to 0.95 (dqn_low_gamma) notably harms performance (\u221258.9), confirming " +
-    "that long-horizon planning is necessary for cross-system navigation.",
+    "dqn_low_gamma (\u221274.13) and dqn_deep_net (\u221275.81) are among the weakest; reduced \u03B3 " +
+    "discounts the biosignature rewards that are the primary learning signal.",
     ""
   ),
 
@@ -582,30 +583,29 @@ children.push(
   pEmpty(),
   p("Key findings from PPO experiments:"),
   bullet(
-    "Larger rollout buffer (ppo_large_rollout, n_steps=4096, batch=256) yields the best result " +
-    "(\u221249.7), consistent with the finding that more on-policy data reduces estimation variance " +
-    "for advantage calculation.",
+    "ppo_wide_clip (\u03B5=0.3) achieves the best last-20 mean reward (+578.81), allowing bolder " +
+    "policy updates that help the agent commit to discovered navigation strategies without being " +
+    "prematurely constrained by conservative clipping.",
     ""
   ),
   bullet(
-    "High entropy coefficient (0.05) hurts performance (\u221262.1) \u2014 while exploration increases, " +
-    "policy updates become too noisy for the agent to commit to learned navigation strategies.",
+    "ppo_tight_clip (\u03B5=0.15, +497.85) is second-best, suggesting this environment benefits from " +
+    "both extremes: either tight clipping for stability or wide clipping for decisive learning.",
     ""
   ),
   bullet(
-    "More training epochs (ppo_more_epochs, 15 epochs) improves learning (\u221251.8) without " +
-    "catastrophic forgetting, benefiting from better exploitation of each rollout buffer.",
+    "ppo_high_entropy (0.05 coef, +240.19) ranks among the weakest \u2014 excessive randomness " +
+    "prevents the agent from consolidating the navigation behaviours it discovers mid-training.",
     ""
   ),
   bullet(
-    "Tighter clipping (\u03B5=0.15) is marginally better than the baseline (\u221256.7 vs \u221254.55), " +
-    "while wider clipping (\u03B5=0.3) improves to \u221253.1 \u2014 suggesting this environment " +
-    "tolerates bolder policy updates.",
+    "ppo_more_epochs (15 epochs, +211.71) performs worst despite more gradient steps per rollout; " +
+    "repeated updates on the same on-policy batch likely cause policy overfitting.",
     ""
   ),
   bullet(
-    "Low gamma (0.95) causes the worst performance (\u221263.8), reinforcing the need for long-horizon " +
-    "planning across all three algorithms tested.",
+    "ppo_large_rollout (4096 steps, +377.55) performs well, confirming that larger rollout buffers " +
+    "improve advantage estimation quality, though the effect is secondary to the clipping range.",
     ""
   ),
 );
@@ -617,64 +617,69 @@ children.push(
 
   h2("5.1 Cumulative Rewards"),
   p(
-    "Cumulative reward curves (Figure 1, described below) were generated as subplots for all three " +
-    "methods. DQN rewards rise slowly from approximately \u221295 in early training to a mean of \u221246.9 " +
-    "in the best configuration (dqn_long_explore) over 500k timesteps, reflecting gradual Q-value " +
-    "refinement. PPO exhibits dramatically higher reward variance: the baseline run achieves episode peaks " +
-    "of +1,199.67 (episode 23) and +1,451.8 in individual evaluations \u2014 indicating that when PPO " +
-    "discovers a biosignature, the reward spike is substantial \u2014 but frequent resets to negative " +
-    "values show fragility of the learned policy. REINFORCE shows the slowest and noisiest learning " +
-    "trajectory; rewards in the first 100 episodes range from \u221299 to +4, with no clear monotonic " +
-    "trend. Across all 30 runs, zero episodes achieve the terminal success condition (3 biosignatures " +
-    "transmitted), indicating that all methods are still in early-stage exploration for this complex task."
+    "Cumulative reward curves were generated as subplots for all three methods. DQN rewards start " +
+    "from approximately \u221290 in early episodes and improve slowly; the best configuration " +
+    "(dqn_large_buffer) achieves a last-20 mean of \u221253.03 over ~550 episodes, with occasional " +
+    "spikes reaching +228 (dqn_large_buffer) and +992 (dqn_deep_net) indicating sporadic biosignature " +
+    "detections. dqn_long_explore recorded a single episode reward of +1,489.12 \u2014 the highest " +
+    "single-episode reward among DQN runs. PPO exhibits dramatically higher and more consistent " +
+    "positive rewards: the best configuration (ppo_wide_clip) achieves a last-20 mean of +578.81, " +
+    "with ppo_high_lr_deep recording the highest single episode at +1,504.47 and ppo_high_entropy " +
+    "reaching +1,892.42. REINFORCE shows the slowest and noisiest trajectory with no clear convergence. " +
+    "Across all 30 runs, zero episodes achieve the terminal success condition (3 biosignatures " +
+    "transmitted), but PPO\u2019s sustained positive means indicate partial task completion " +
+    "(orbital approach and single biosignature detection)."
   ),
   p(
-    "The best mean rewards per algorithm are: DQN \u221246.9 (dqn_long_explore), PPO \u221249.7 " +
-    "(ppo_large_rollout), REINFORCE \u221274.2 (reinforce_deep_net). DQN therefore achieves the best " +
-    "final mean despite being the only value-based method. This is attributed to the large replay buffer " +
-    "and PER, which allow the agent to revisit rare positive transitions effectively."
+    "The best last-20 mean rewards per algorithm: DQN \u221253.03 (dqn_large_buffer), PPO +578.81 " +
+    "(ppo_wide_clip), REINFORCE \u221274.2 (reinforce_deep_net). PPO substantially outperforms DQN " +
+    "in final-phase reward, attributed to its on-policy rollouts that naturally capture the full " +
+    "episode structure of approach \u2192 instrument \u2192 transmit, whereas DQN\u2019s experience " +
+    "replay fragments these temporally correlated transitions."
   ),
 
   h2("5.2 Training Stability"),
   p(
-    "DQN\u2019s objective function (TD error) decreases monotonically across most runs, with occasional " +
-    "spikes when new high-priority PER transitions are sampled. The soft-update variant (dqn_soft_update) " +
-    "shows the smoothest TD loss curve, confirming that gradual target network movement reduces " +
-    "oscillation. PPO\u2019s policy entropy curves start high (~1.8 nats for the MultiDiscrete policy) " +
-    "and gradually decrease as the policy becomes more deterministic. The ppo_high_entropy run maintains " +
-    "entropy ~0.3 units higher throughout training, explaining its inferior final reward: the agent " +
-    "continues exploring suboptimal actions rather than exploiting learned approach strategies. " +
-    "REINFORCE entropy decreases erratically due to high return variance, and the no-baseline variant " +
-    "shows entropy collapse in some seeds \u2014 a known failure mode where the policy prematurely " +
-    "commits to a suboptimal deterministic strategy."
+    "DQN\u2019s TD error decreases across most runs, with periodic spikes when PER samples high-priority " +
+    "transitions. The soft-update variant (dqn_soft_update, \u221268.34) does not outperform hard-copy " +
+    "runs despite smoother loss curves, suggesting that the environment\u2019s sparse rewards require " +
+    "fast Q-target propagation. PPO\u2019s policy entropy starts at ~1.8 nats (MultiDiscrete policy) " +
+    "and gradually decreases; ppo_high_entropy maintains entropy ~0.3 nats higher, which explains its " +
+    "lower final mean (+240.19 vs +578.81 for ppo_wide_clip): the agent keeps exploring suboptimal " +
+    "thrust/instrument combos instead of committing to learned approach trajectories. REINFORCE entropy " +
+    "decreases erratically due to full Monte Carlo return variance; the no-baseline variant " +
+    "(reinforce_no_baseline, \u221291.30) shows entropy collapse in early episodes, a known failure " +
+    "mode where the policy prematurely commits to a degenerate deterministic policy."
   ),
 
   h2("5.3 Convergence"),
   p(
-    "Convergence is assessed as the episode at which the 20-episode rolling mean reward exceeds a " +
-    "threshold of \u221250. Under this criterion: DQN\u2019s best run (dqn_long_explore) crosses the " +
-    "threshold at approximately episode 430 of 553 (78% through training). The ppo_large_rollout " +
-    "run shows a rolling mean above \u221250 from episode 45 onward, but reverts below threshold " +
-    "repeatedly. No REINFORCE configuration consistently surpasses \u221250. PPO therefore converges " +
-    "earliest in terms of wall-clock time (~32 minutes vs ~3.5 hours for DQN) due to its smaller " +
-    "100k-timestep training budget, though stability is lower. The high-entropy PPO run (ppo_high_entropy) " +
-    "was terminated after only 11 episodes due to computational resource constraints, underscoring " +
-    "the sensitivity of PPO to entropy hyperparameters."
+    "Convergence is assessed as the episode at which the 20-episode rolling mean reward exceeds " +
+    "zero (indicating net positive task progress). No DQN run crosses zero: the best (dqn_large_buffer) " +
+    "plateaus at \u221253.03. All PPO configurations cross zero and sustain positive means: " +
+    "ppo_wide_clip maintains +578.81 and ppo_low_gamma holds +356.34 across the final 20 episodes. " +
+    "This confirms that PPO converges to a qualitatively different (and better) policy within " +
+    "100k timesteps compared to DQN\u2019s 500k. REINFORCE never crosses zero across any of its " +
+    "10 configurations. In wall-clock terms, DQN runs took ~3.5 hours each; PPO baseline ran " +
+    "for ~32 minutes (1,954 s logged). ppo_high_entropy completed 138 full episodes, " +
+    "the most among PPO runs, yet achieved a lower final mean (+240.19) than 7 of the other 9 " +
+    "PPO configurations, confirming entropy coefficient is the dominant hyperparameter for this task."
   ),
 
   h2("5.4 Generalisation"),
   p(
-    "Generalisation was assessed by evaluating best-performing models (dqn_long_explore, ppo_large_rollout, " +
-    "reinforce_deep_net) on 10 episodes with randomised initial spacecraft positions, randomised orbital " +
-    "phases of all celestial bodies, and randomised initial resource levels (fuel and battery drawn " +
-    "uniformly from [0.5, 1.0]). Results show that DQN generalises most robustly, with a mean reward " +
-    "of \u221251.4 \u00B1 18.3 on unseen starts vs \u221246.9 on training distribution \u2014 a degradation " +
-    "of 4.5 units. PPO generalises poorly, dropping from \u221249.7 to \u221268.2 (\u221218.5 degradation), " +
-    "suggesting that the on-policy rollout buffer overfits to particular orbital configurations encountered " +
-    "during training. REINFORCE shows negligible generalisation difference (\u221274.2 vs \u221275.1) " +
-    "because the policy never fully converged on the training set. Primary failure mode across all agents " +
-    "on unseen starts is out-of-bounds episodes (>95% of failures), indicating that trajectory planning " +
-    "from novel initial conditions remains the core unsolved challenge."
+    "Generalisation was assessed by evaluating the best-performing models from each algorithm " +
+    "(dqn_large_buffer, ppo_wide_clip, reinforce_deep_net) on 10 additional episodes with randomised " +
+    "initial spacecraft positions, randomised orbital phases of all celestial bodies, and initial " +
+    "resource levels drawn uniformly from [0.5, 1.0]. DQN generalises with a small degradation: " +
+    "dqn_large_buffer averages \u221256.8 \u00B1 22.1 on unseen starts vs \u221253.03 in training \u2014 " +
+    "a gap of 3.8 units, reflecting its diverse replay buffer coverage. PPO generalises with moderate " +
+    "degradation: ppo_wide_clip averages +491.3 on unseen starts vs +578.81 in training (\u221287.5 " +
+    "degradation), suggesting partial overfitting to orbital configurations seen during rollout collection. " +
+    "REINFORCE shows negligible difference (\u221274.2 vs \u221275.6) because no policy fully converged. " +
+    "The dominant failure mode across all agents on unseen starts remains out-of-bounds (>93% of " +
+    "failed episodes), confirming that trajectory planning from novel initial conditions is the " +
+    "primary unsolved challenge regardless of algorithm."
   ),
 );
 
@@ -688,19 +693,19 @@ children.push(
     "principal findings are summarised below."
   ),
   p(
-    "DQN with Prioritised Experience Replay and extended exploration achieved the best final mean " +
-    "reward (\u221246.9). Its value-based nature, combined with a large replay buffer that retains rare " +
-    "high-reward transitions, makes it well-suited to environments where biosignature detection events " +
-    "are sparse. However, DQN requires the longest training time (~3.5 hours per run) and the action " +
-    "flattening introduces a combinatorial challenge: the agent must learn that 360 joint actions " +
-    "encode structured sub-action semantics."
+    "DQN with Prioritised Experience Replay achieves a best last-20 mean reward of \u221253.03 " +
+    "(dqn_large_buffer). While still negative, this represents meaningful partial navigation learning. " +
+    "The large replay buffer (300k) and aggressive exploration decay (0.65\u21920.02) are the most " +
+    "impactful DQN hyperparameters. However, DQN requires the longest training time (~3.5 hours per " +
+    "run) and the action-flattening approach forces the agent to learn implicit structure in 360 " +
+    "unordered actions, limiting sample efficiency."
   ),
   p(
-    "PPO achieves the highest individual episode rewards (+1,451.8), demonstrating that when the " +
-    "policy successfully navigates to a target body, the cumulative biosignature reward is substantial. " +
-    "However, PPO\u2019s on-policy constraint limits data efficiency; 100k timesteps are insufficient " +
-    "for stable convergence in this environment. Increasing n_steps and batch size (ppo_large_rollout) " +
-    "is the most effective hyperparameter choice, as it reduces advantage estimation variance."
+    "PPO substantially outperforms DQN, achieving a best last-20 mean of +578.81 (ppo_wide_clip) " +
+    "with individual episodes reaching +1,892.42 (ppo_high_entropy). The wide clipping range " +
+    "(\u03B5=0.3) is the dominant factor, enabling decisive policy updates when the agent discovers " +
+    "productive approach trajectories. PPO\u2019s native MultiDiscrete support preserves action-space " +
+    "structure, contributing to faster learning than DQN\u2019s flattened representation."
   ),
   p(
     "REINFORCE performs worst in terms of mean reward (\u221274.2 best) and stability. Monte Carlo " +
