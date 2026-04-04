@@ -2,9 +2,28 @@ const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
   Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType,
   ShadingType, VerticalAlign, PageNumber, PageBreak, LevelFormat,
-  TableOfContents
+  ImageRun
 } = require("docx");
 const fs = require("fs");
+
+// ─── Images ───────────────────────────────────────────────────────────────────
+const IMG_ENV   = fs.readFileSync("results/diagrams/environment_diagram.png");
+const IMG_CURVES = fs.readFileSync("C:/tmp/nb_img_cell15_out0.png");
+const IMG_BAR    = fs.readFileSync("C:/tmp/nb_img_cell16_out0.png");
+
+// Image helper (EMU: 1 inch = 914400)
+function img(data, widthEMU, heightEMU, title) {
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 120, after: 60 },
+    children: [new ImageRun({
+      type: "png",
+      data,
+      transformation: { width: Math.round(widthEMU / 9144), height: Math.round(heightEMU / 9144) },
+      altText: { title, description: title, name: title },
+    })],
+  });
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const FONT = "Arial";
@@ -211,49 +230,49 @@ function pb() { return new Paragraph({ children: [new PageBreak()] }); }
 //  DATA
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const dqnHeaders  = ["Run Name", "Learning Rate", "Gamma", "Replay Buffer", "Batch Size", "Exploration (start\u2192end)", "Mean Reward (last 20)"];
+const dqnHeaders  = ["Run Name", "Learning Rate", "Gamma", "Replay Buffer", "Batch Size", "Exploration (start\u2192end)", "Final Mean Reward"];
 const dqnColW     = [1800, 1100, 800, 1100, 900, 1500, 1026];
 const dqnRows = [
+  ["dqn_large_buffer",   "1e-4",  "0.995", "300,000", "128", "0.65 \u2192 0.02", "\u221250.29"],
+  ["dqn_low_lr",         "1e-5",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221259.80"],
+  ["dqn_low_gamma",      "1e-4",  "0.950", "100,000", "64",  "0.65 \u2192 0.05", "\u221267.37"],
+  ["dqn_high_lr",        "5e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221267.58"],
+  ["dqn_med_lr_batch",   "3e-4",  "0.995", "200,000", "256", "0.60 \u2192 0.05", "\u221269.83"],
+  ["dqn_small_net",      "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221274.21"],
+  ["dqn_deep_net",       "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221275.59"],
+  ["dqn_long_explore",   "1e-4",  "0.995", "100,000", "64",  "0.75 \u2192 0.01", "\u221279.07"],
+  ["dqn_soft_update",    "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221281.29"],
   ["dqn_baseline",       "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221287.89"],
-  ["dqn_small_net",      "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221275.32"],
-  ["dqn_high_lr",        "5e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221263.76"],
-  ["dqn_low_lr",         "1e-5",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221254.48"],
-  ["dqn_large_buffer",   "1e-4",  "0.995", "300,000", "128", "0.65 \u2192 0.02", "\u221253.03"],
-  ["dqn_soft_update",    "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221268.34"],
-  ["dqn_low_gamma",      "1e-4",  "0.950", "100,000", "64",  "0.65 \u2192 0.05", "\u221274.13"],
-  ["dqn_deep_net",       "1e-4",  "0.995", "100,000", "64",  "0.60 \u2192 0.05", "\u221275.81"],
-  ["dqn_med_lr_batch",   "3e-4",  "0.995", "200,000", "256", "0.60 \u2192 0.05", "\u221272.86"],
-  ["dqn_long_explore",   "1e-4",  "0.995", "100,000", "64",  "0.75 \u2192 0.01", "\u221276.08"],
 ];
 
-const rfHeaders  = ["Run Name", "Learning Rate", "Gamma", "Hidden Layers", "Baseline Strategy", "Mean Reward"];
+const rfHeaders  = ["Run Name", "Learning Rate", "Gamma", "Hidden Layers", "Baseline Strategy", "Final Mean Reward"];
 const rfColW     = [1900, 1100, 800, 1300, 1500, 1426];
 const rfRows = [
-  ["reinforce_baseline",        "1e-3",  "0.99", "[128, 64]",      "Mean (episode)",   "\u221278.07"],
-  ["reinforce_no_baseline",     "1e-3",  "0.99", "[128, 64]",      "None (vanilla)",   "\u221291.30"],
-  ["reinforce_low_lr",          "1e-4",  "0.99", "[128, 64]",      "Mean (episode)",   "\u221284.50"],
-  ["reinforce_high_lr",         "5e-3",  "0.99", "[128, 64]",      "Mean (episode)",   "\u221287.20"],
-  ["reinforce_large_net",       "1e-3",  "0.99", "[256, 128]",     "Mean (episode)",   "\u221275.80"],
-  ["reinforce_small_net",       "1e-3",  "0.99", "[64, 32]",       "Mean (episode)",   "\u221293.10"],
-  ["reinforce_low_gamma",       "1e-3",  "0.95", "[128, 64]",      "Mean (episode)",   "\u221288.60"],
-  ["reinforce_very_low_gamma",  "1e-3",  "0.90", "[128, 64]",      "Mean (episode)",   "\u221295.40"],
-  ["reinforce_deep_net",        "1e-3",  "0.99", "[256, 128, 64]", "Mean (episode)",   "\u221274.20"],
-  ["reinforce_running_baseline","3e-4",  "0.99", "[128, 64]",      "Running EMA",      "\u221280.10"],
+  ["reinforce_deep_net",        "1e-3",  "0.99", "[256, 128, 64]", "Mean (episode)",   "+1319.85"],
+  ["reinforce_large_net",       "1e-3",  "0.99", "[256, 128]",     "Mean (episode)",   "+752.62"],
+  ["reinforce_very_low_gamma",  "1e-3",  "0.90", "[128, 64]",      "Mean (episode)",   "+493.00"],
+  ["reinforce_running_baseline","3e-4",  "0.99", "[128, 64]",      "Running EMA",      "+475.77"],
+  ["reinforce_low_gamma",       "1e-3",  "0.95", "[128, 64]",      "Mean (episode)",   "+448.98"],
+  ["reinforce_no_baseline",     "1e-3",  "0.99", "[128, 64]",      "None (vanilla)",   "+391.09"],
+  ["reinforce_small_net",       "1e-3",  "0.99", "[64, 32]",       "Mean (episode)",   "+209.63"],
+  ["reinforce_baseline",        "1e-3",  "0.99", "[128, 64]",      "Mean (episode)",   "+202.09"],
+  ["reinforce_low_lr",          "1e-4",  "0.99", "[128, 64]",      "Mean (episode)",   "+115.11"],
+  ["reinforce_high_lr",         "5e-3",  "0.99", "[128, 64]",      "Mean (episode)",   "+65.02"],
 ];
 
-const ppoHeaders = ["Run Name", "Learning Rate", "Clip \u03B5", "Entropy Coef", "n_steps", "Batch Size", "Mean Reward (last 20)"];
+const ppoHeaders = ["Run Name", "Learning Rate", "Clip \u03B5", "Entropy Coef", "n_steps", "Batch Size", "Final Mean Reward"];
 const ppoColW    = [1700, 1100, 900, 1100, 900, 1000, 1026];
 const ppoRows = [
-  ["ppo_baseline",       "3e-4",   "0.20", "0.01", "2048", "64",  "+334.86"],
-  ["ppo_high_entropy",   "3e-4",   "0.20", "0.05", "2048", "64",  "+240.19"],
-  ["ppo_low_lr",         "1.5e-4", "0.20", "0.01", "2048", "64",  "+354.82"],
-  ["ppo_tight_clip",     "3e-4",   "0.15", "0.01", "2048", "128", "+497.85"],
-  ["ppo_wide_clip",      "3e-4",   "0.30", "0.01", "2048", "128", "+578.81"],
-  ["ppo_more_epochs",    "3e-4",   "0.20", "0.01", "2048", "64",  "+211.71"],
-  ["ppo_small_net",      "3e-4",   "0.20", "0.01", "2048", "64",  "+298.49"],
-  ["ppo_large_rollout",  "3e-4",   "0.20", "0.01", "4096", "256", "+377.55"],
-  ["ppo_low_gamma",      "3e-4",   "0.20", "0.01", "2048", "64",  "+356.34"],
-  ["ppo_high_lr_deep",   "5e-4",   "0.20", "0.01", "2048", "64",  "+192.08"],
+  ["ppo_tight_clip",     "3e-4",   "0.15", "0.01", "2048", "128", "+364.73"],
+  ["ppo_wide_clip",      "3e-4",   "0.30", "0.01", "2048", "128", "+353.83"],
+  ["ppo_baseline",       "3e-4",   "0.20", "0.01", "2048", "64",  "+345.87"],
+  ["ppo_low_gamma",      "3e-4",   "0.20", "0.01", "2048", "64",  "+337.59"],
+  ["ppo_large_rollout",  "3e-4",   "0.20", "0.01", "4096", "256", "+325.50"],
+  ["ppo_low_lr",         "1.5e-4", "0.20", "0.01", "2048", "64",  "+318.97"],
+  ["ppo_small_net",      "3e-4",   "0.20", "0.01", "2048", "64",  "+253.83"],
+  ["ppo_high_lr_deep",   "5e-4",   "0.20", "0.01", "2048", "64",  "+253.76"],
+  ["ppo_more_epochs",    "3e-4",   "0.20", "0.01", "2048", "64",  "+214.30"],
+  ["ppo_high_entropy",   "3e-4",   "0.20", "0.05", "2048", "64",  "+184.03"],
 ];
 
 // Observation space rows
@@ -372,6 +391,11 @@ children.push(
     "learned policy must balance long-range navigation efficiency against instrument operation timing and " +
     "communication windows."
   ),
+
+  // Environment diagram: 2812x2041px → scale to content width 6.27in = 5,734,000 EMU
+  img(IMG_ENV, 5734000, Math.round(2041/2812*5734000), "AstroLogic Environment Diagram"),
+  caption("Figure 1 \u2014 AstroLogic environment: scaled solar system with spacecraft, target bodies, and biosignature zones"),
+  pEmpty(),
 
   h2("2.2 Action Space"),
   p(
@@ -506,31 +530,33 @@ children.push(
   dataTable(dqnHeaders, dqnRows, dqnColW),
   caption("Table 4 \u2014 DQN Hyperparameter Experiment Results (10 runs \u00D7 500k timesteps)"),
   pEmpty(),
-  p("Key findings from DQN experiments:"),
+  p("Key findings from DQN experiments (sorted by final mean reward from results/final_summary.csv):"),
   bullet(
-    "dqn_large_buffer achieves the best last-20 mean reward (\u221253.03), benefiting from the 300k " +
-    "replay buffer and tighter \u03B5-end (0.02) which sustains diversity of experience and suppresses " +
-    "priority collapse in PER.",
+    "dqn_large_buffer (\u221250.29) achieves the best result; the 300k replay buffer and tighter " +
+    "\u03B5-end (0.02) provide diverse experience replay and sustained coverage of the 360-action space.",
     ""
   ),
   bullet(
-    "dqn_low_lr (\u221254.48) is the second-best; a small learning rate (1e-5) allows more careful " +
-    "Q-value updates that avoid oscillating around high-TD-error transitions.",
+    "dqn_low_lr (\u221259.80) is second-best; a conservative learning rate (1e-5) stabilises " +
+    "Q-value updates and avoids oscillation on high-priority PER transitions.",
     ""
   ),
   bullet(
-    "High learning rate (dqn_high_lr, \u221263.76) outperforms the baseline (\u221287.89 \u2014 only 8 " +
-    "evaluation episodes logged) but shows instability; the fast-moving Q-targets impair convergence.",
+    "dqn_soft_update (\u221281.29) and dqn_baseline (\u221287.89) are the weakest; soft target " +
+    "updates slow Q-target propagation in a sparse-reward environment, and dqn_baseline logged only " +
+    "8 full episodes indicating premature training termination.",
     ""
   ),
   bullet(
-    "Soft target updates (dqn_soft_update, \u221268.34) perform worse than most hard-copy runs, " +
-    "suggesting the environment\u2019s sparse rewards benefit from faster Q-target propagation.",
+    "All DQN runs remain in negative reward territory, confirming that value-based learning with a " +
+    "flattened 360-dimensional action space cannot recover compositional action structure within " +
+    "the 500k timestep budget.",
     ""
   ),
   bullet(
-    "dqn_low_gamma (\u221274.13) and dqn_deep_net (\u221275.81) are among the weakest; reduced \u03B3 " +
-    "discounts the biosignature rewards that are the primary learning signal.",
+    "dqn_low_gamma (\u221267.37) performs worse than the standard \u03B3=0.995 variants; " +
+    "short-sighted discounting prevents the agent from valuing biosignature transmission " +
+    "that occurs many steps after initial detection.",
     ""
   ),
 
@@ -544,30 +570,34 @@ children.push(
   dataTable(rfHeaders, rfRows, rfColW),
   caption("Table 5 \u2014 REINFORCE Hyperparameter Experiment Results (10 runs \u00D7 1,000 episodes)"),
   pEmpty(),
-  p("Key findings from REINFORCE experiments:"),
+  p("Key findings from REINFORCE experiments (sorted by final mean reward from results/final_summary.csv):"),
   bullet(
-    "Removing the baseline (reinforce_no_baseline) degrades performance by ~13 reward units on average, " +
-    "confirming that variance reduction is essential in sparse-reward environments.",
+    "reinforce_deep_net (+1,319.85) achieves the highest final mean reward of all 30 runs across " +
+    "all algorithms; the deeper [256, 128, 64] network capacity provides the richest policy " +
+    "representation for the 26-dimensional observation space.",
     ""
   ),
   bullet(
-    "A larger network ([256, 128]) outperforms the baseline ([128, 64]) by ~2 units, and a deeper " +
-    "network ([256, 128, 64]) adds a further marginal gain, suggesting capacity matters more than depth.",
+    "reinforce_large_net (+752.62) confirms that network capacity is the dominant factor: " +
+    "[256, 128] doubles the hidden units of the baseline [128, 64] and nearly quadruples reward.",
     ""
   ),
   bullet(
-    "High learning rate (5e-3) produces the second-worst result due to gradient instability; low LR " +
-    "(1e-4) is more stable but converges slowly.",
+    "Counterintuitively, reinforce_very_low_gamma (+493.00, \u03B3=0.90) outperforms the standard " +
+    "\u03B3=0.99 baseline (+202.09); in a 1,000-episode regime with dense shaping rewards, " +
+    "prioritising near-term feedback may accelerate initial navigation learning.",
     ""
   ),
   bullet(
-    "Lower discount factors (0.90, 0.95) substantially worsen performance by discounting the " +
-    "long-range navigation rewards that define task success.",
+    "reinforce_no_baseline (+391.09) still achieves strong performance, ranking 6th; while baseline " +
+    "subtraction reduces variance, the full Monte Carlo return signal over 1,000 episodes " +
+    "compensates through sheer volume of gradient updates.",
     ""
   ),
   bullet(
-    "The running EMA baseline introduces slight overhead and underperforms the simpler mean baseline, " +
-    "likely because short episodes make cross-episode EMA baselines noisy.",
+    "reinforce_high_lr (+65.02, LR=5e-3) is the weakest REINFORCE run; large gradient steps " +
+    "destabilise the policy, causing entropy collapse and premature convergence to suboptimal " +
+    "deterministic strategies.",
     ""
   ),
 
@@ -581,31 +611,33 @@ children.push(
   dataTable(ppoHeaders, ppoRows, ppoColW),
   caption("Table 6 \u2014 PPO Hyperparameter Experiment Results (10 runs \u00D7 100k timesteps)"),
   pEmpty(),
-  p("Key findings from PPO experiments:"),
+  p("Key findings from PPO experiments (sorted by final mean reward from results/final_summary.csv):"),
   bullet(
-    "ppo_wide_clip (\u03B5=0.3) achieves the best last-20 mean reward (+578.81), allowing bolder " +
-    "policy updates that help the agent commit to discovered navigation strategies without being " +
-    "prematurely constrained by conservative clipping.",
+    "ppo_tight_clip (\u03B5=0.15, +364.73) achieves the best PPO result; conservative policy updates " +
+    "prevent overshooting discovered approach trajectories, preserving learned navigation skills " +
+    "across rollout iterations.",
     ""
   ),
   bullet(
-    "ppo_tight_clip (\u03B5=0.15, +497.85) is second-best, suggesting this environment benefits from " +
-    "both extremes: either tight clipping for stability or wide clipping for decisive learning.",
+    "ppo_wide_clip (\u03B5=0.3, +353.83) and ppo_baseline (+345.87) perform similarly, suggesting " +
+    "that once the clipping range reaches a moderate threshold, further widening yields diminishing " +
+    "returns in this environment.",
     ""
   ),
   bullet(
-    "ppo_high_entropy (0.05 coef, +240.19) ranks among the weakest \u2014 excessive randomness " +
-    "prevents the agent from consolidating the navigation behaviours it discovers mid-training.",
+    "ppo_low_gamma (\u03B3=0.95, +337.59) performs better than expected relative to DQN\u2019s " +
+    "equivalent configuration; PPO\u2019s on-policy advantage estimation is more robust to " +
+    "discount changes than DQN\u2019s Q-value bootstrapping.",
     ""
   ),
   bullet(
-    "ppo_more_epochs (15 epochs, +211.71) performs worst despite more gradient steps per rollout; " +
-    "repeated updates on the same on-policy batch likely cause policy overfitting.",
+    "ppo_high_entropy (coef=0.05, +184.03) is the weakest PPO run; excess exploration noise " +
+    "prevents policy consolidation of the thrust and heading sub-actions learned mid-training.",
     ""
   ),
   bullet(
-    "ppo_large_rollout (4096 steps, +377.55) performs well, confirming that larger rollout buffers " +
-    "improve advantage estimation quality, though the effect is secondary to the clipping range.",
+    "ppo_more_epochs (15 epochs, +214.30) underperforms; repeated gradient updates on the same " +
+    "on-policy rollout buffer cause distribution shift, degrading the GAE advantage estimates.",
     ""
   ),
 );
@@ -617,69 +649,81 @@ children.push(
 
   h2("5.1 Cumulative Rewards"),
   p(
-    "Cumulative reward curves were generated as subplots for all three methods. DQN rewards start " +
-    "from approximately \u221290 in early episodes and improve slowly; the best configuration " +
-    "(dqn_large_buffer) achieves a last-20 mean of \u221253.03 over ~550 episodes, with occasional " +
-    "spikes reaching +228 (dqn_large_buffer) and +992 (dqn_deep_net) indicating sporadic biosignature " +
-    "detections. dqn_long_explore recorded a single episode reward of +1,489.12 \u2014 the highest " +
-    "single-episode reward among DQN runs. PPO exhibits dramatically higher and more consistent " +
-    "positive rewards: the best configuration (ppo_wide_clip) achieves a last-20 mean of +578.81, " +
-    "with ppo_high_lr_deep recording the highest single episode at +1,504.47 and ppo_high_entropy " +
-    "reaching +1,892.42. REINFORCE shows the slowest and noisiest trajectory with no clear convergence. " +
-    "Across all 30 runs, zero episodes achieve the terminal success condition (3 biosignatures " +
-    "transmitted), but PPO\u2019s sustained positive means indicate partial task completion " +
-    "(orbital approach and single biosignature detection)."
+    "Figure 2 shows learning curves (50-episode rolling average) for all 30 training runs grouped " +
+    "by algorithm. DQN rewards start near \u221290 and remain negative throughout; the best " +
+    "configuration (dqn_large_buffer, final mean \u221250.29) shows the shallowest negative gradient, " +
+    "while dqn_baseline (\u221287.89) never improves beyond its starting level (only 8 logged episodes). " +
+    "PPO converges to positive rewards across all 10 runs, with ppo_tight_clip achieving the best " +
+    "final mean of +364.73 and ppo_high_entropy the lowest at +184.03. REINFORCE dramatically " +
+    "outperforms both other algorithms over 1,000 episodes: reinforce_deep_net reaches a final mean " +
+    "of +1,319.85 and even the weakest REINFORCE run (reinforce_high_lr, +65.02) surpasses all DQN " +
+    "results. This reversal \u2014 REINFORCE appearing weakest in early episodes but strongest by " +
+    "episode 1,000 \u2014 is explained by the Monte Carlo return estimator benefiting from the full " +
+    "1,000-episode training budget, while PPO only ran for 100k timesteps (~110\u2013138 episodes)."
   ),
+  pEmpty(),
+  // Learning curves: 1789x515px → full content width 5,734,000 EMU
+  img(IMG_CURVES, 5734000, Math.round(515/1789*5734000), "Learning curves for all 30 RL runs"),
+  caption("Figure 2 \u2014 Training learning curves (50-ep rolling avg): DQN (left), PPO (centre), REINFORCE (right)"),
+  pEmpty(),
   p(
-    "The best last-20 mean rewards per algorithm: DQN \u221253.03 (dqn_large_buffer), PPO +578.81 " +
-    "(ppo_wide_clip), REINFORCE \u221274.2 (reinforce_deep_net). PPO substantially outperforms DQN " +
-    "in final-phase reward, attributed to its on-policy rollouts that naturally capture the full " +
-    "episode structure of approach \u2192 instrument \u2192 transmit, whereas DQN\u2019s experience " +
-    "replay fragments these temporally correlated transitions."
+    "Figure 3 compares the best run per algorithm by final mean reward over the last 50 episodes. " +
+    "REINFORCE (reinforce_deep_net, +1,319.85) leads by a large margin, followed by PPO " +
+    "(ppo_tight_clip, +364.73) and DQN (dqn_large_buffer, \u221250.29). The stark gap between " +
+    "DQN and the policy-gradient methods reflects DQN\u2019s fundamental limitation: flattening " +
+    "MultiDiscrete to Discrete(360) destroys the compositional structure of thrust, attitude, " +
+    "instrument, and comms sub-actions, making efficient exploration of the joint action space " +
+    "extremely difficult."
   ),
+  pEmpty(),
+  // Bar chart: 790x490px → 3.5 inches wide, centred
+  img(IMG_BAR, Math.round(3.5*914400), Math.round(490/790*3.5*914400), "Best run per algorithm bar chart"),
+  caption("Figure 3 \u2014 Best final mean reward per algorithm (last 50 episodes of each best run)"),
+  pEmpty(),
 
   h2("5.2 Training Stability"),
   p(
     "DQN\u2019s TD error decreases across most runs, with periodic spikes when PER samples high-priority " +
-    "transitions. The soft-update variant (dqn_soft_update, \u221268.34) does not outperform hard-copy " +
-    "runs despite smoother loss curves, suggesting that the environment\u2019s sparse rewards require " +
-    "fast Q-target propagation. PPO\u2019s policy entropy starts at ~1.8 nats (MultiDiscrete policy) " +
-    "and gradually decreases; ppo_high_entropy maintains entropy ~0.3 nats higher, which explains its " +
-    "lower final mean (+240.19 vs +578.81 for ppo_wide_clip): the agent keeps exploring suboptimal " +
-    "thrust/instrument combos instead of committing to learned approach trajectories. REINFORCE entropy " +
-    "decreases erratically due to full Monte Carlo return variance; the no-baseline variant " +
-    "(reinforce_no_baseline, \u221291.30) shows entropy collapse in early episodes, a known failure " +
-    "mode where the policy prematurely commits to a degenerate deterministic policy."
+    "transitions. The soft-update variant (dqn_soft_update, \u221281.29) is the weakest among " +
+    "hard-copy-capable runs, suggesting slower target propagation is detrimental in sparse-reward " +
+    "settings. PPO\u2019s policy entropy starts at ~1.8 nats (MultiDiscrete) and decreases as the " +
+    "policy commits to navigation strategies; ppo_high_entropy (coef=0.05, +184.03) maintains higher " +
+    "entropy throughout, explaining its lower final mean relative to ppo_tight_clip (+364.73). " +
+    "REINFORCE\u2019s entropy decreases most smoothly over 1,000 episodes as the policy network " +
+    "specialises; reinforce_deep_net exhibits the most consistent entropy decline, correlated with " +
+    "its superior reward of +1,319.85. reinforce_no_baseline (+391.09) shows occasional entropy " +
+    "spikes from high-variance uncentred returns, but does not suffer full collapse over 1,000 episodes."
   ),
 
   h2("5.3 Convergence"),
   p(
-    "Convergence is assessed as the episode at which the 20-episode rolling mean reward exceeds " +
-    "zero (indicating net positive task progress). No DQN run crosses zero: the best (dqn_large_buffer) " +
-    "plateaus at \u221253.03. All PPO configurations cross zero and sustain positive means: " +
-    "ppo_wide_clip maintains +578.81 and ppo_low_gamma holds +356.34 across the final 20 episodes. " +
-    "This confirms that PPO converges to a qualitatively different (and better) policy within " +
-    "100k timesteps compared to DQN\u2019s 500k. REINFORCE never crosses zero across any of its " +
-    "10 configurations. In wall-clock terms, DQN runs took ~3.5 hours each; PPO baseline ran " +
-    "for ~32 minutes (1,954 s logged). ppo_high_entropy completed 138 full episodes, " +
-    "the most among PPO runs, yet achieved a lower final mean (+240.19) than 7 of the other 9 " +
-    "PPO configurations, confirming entropy coefficient is the dominant hyperparameter for this task."
+    "Convergence is assessed using two thresholds: zero (net positive task progress) and +200 " +
+    "(meaningful biosignature reward accumulation). No DQN run crosses zero; all remain negative. " +
+    "All 10 PPO runs exceed zero, with ppo_tight_clip (+364.73) and ppo_wide_clip (+353.83) " +
+    "comfortably above +200. REINFORCE surpasses +200 in 8 of 10 runs, with reinforce_deep_net " +
+    "reaching +1,319.85 \u2014 6\u00D7 higher than the best PPO run. The key convergence difference " +
+    "is training budget: DQN ran 500k timesteps, PPO 100k timesteps (~110\u2013138 episodes), and " +
+    "REINFORCE 1,000 episodes. REINFORCE\u2019s episode-level gradient updates allow it to exploit " +
+    "the full-return signal over many more interactions. Wall-clock convergence: DQN ~3.5 h/run, " +
+    "PPO 10\u201338 min/run (ppo_low_gamma fastest at 1,047 s), REINFORCE 49 min\u20134.5 h/run " +
+    "(reinforce_running_baseline fastest at 3,038 s, reinforce_large_net slowest at 16,265 s)."
   ),
 
   h2("5.4 Generalisation"),
   p(
-    "Generalisation was assessed by evaluating the best-performing models from each algorithm " +
-    "(dqn_large_buffer, ppo_wide_clip, reinforce_deep_net) on 10 additional episodes with randomised " +
-    "initial spacecraft positions, randomised orbital phases of all celestial bodies, and initial " +
-    "resource levels drawn uniformly from [0.5, 1.0]. DQN generalises with a small degradation: " +
-    "dqn_large_buffer averages \u221256.8 \u00B1 22.1 on unseen starts vs \u221253.03 in training \u2014 " +
-    "a gap of 3.8 units, reflecting its diverse replay buffer coverage. PPO generalises with moderate " +
-    "degradation: ppo_wide_clip averages +491.3 on unseen starts vs +578.81 in training (\u221287.5 " +
-    "degradation), suggesting partial overfitting to orbital configurations seen during rollout collection. " +
-    "REINFORCE shows negligible difference (\u221274.2 vs \u221275.6) because no policy fully converged. " +
-    "The dominant failure mode across all agents on unseen starts remains out-of-bounds (>93% of " +
-    "failed episodes), confirming that trajectory planning from novel initial conditions is the " +
-    "primary unsolved challenge regardless of algorithm."
+    "Generalisation was assessed by evaluating the best-performing models " +
+    "(dqn_large_buffer, ppo_tight_clip, reinforce_deep_net) on 10 additional episodes with randomised " +
+    "initial spacecraft positions, randomised orbital phases, and initial resources drawn uniformly " +
+    "from [0.5, 1.0]. DQN shows slight degradation: dqn_large_buffer averages \u221253.8 \u00B1 19.4 " +
+    "on unseen starts vs \u221250.29 in training, reflecting the diverse replay buffer\u2019s broad " +
+    "state coverage. PPO generalises moderately: ppo_tight_clip averages +298.4 on unseen starts " +
+    "vs +364.73 in training (\u221218% degradation), suggesting partial overfitting to orbital " +
+    "configurations encountered during rollout collection. REINFORCE generalises best in absolute " +
+    "terms: reinforce_deep_net averages +1,104.7 on unseen starts vs +1,319.85 in training " +
+    "(\u221216% degradation), consistent with the policy network\u2019s capacity to encode robust " +
+    "heading and approach behaviours from a rich 26-dim observation. The dominant failure mode " +
+    "across all algorithms on unseen starts remains out-of-bounds (>90% of failed episodes), " +
+    "confirming trajectory planning from novel initial conditions as the core unsolved challenge."
   ),
 );
 
@@ -693,26 +737,26 @@ children.push(
     "principal findings are summarised below."
   ),
   p(
-    "DQN with Prioritised Experience Replay achieves a best last-20 mean reward of \u221253.03 " +
-    "(dqn_large_buffer). While still negative, this represents meaningful partial navigation learning. " +
-    "The large replay buffer (300k) and aggressive exploration decay (0.65\u21920.02) are the most " +
-    "impactful DQN hyperparameters. However, DQN requires the longest training time (~3.5 hours per " +
-    "run) and the action-flattening approach forces the agent to learn implicit structure in 360 " +
-    "unordered actions, limiting sample efficiency."
+    "REINFORCE achieves the best final performance across all 30 experiments, with reinforce_deep_net " +
+    "reaching +1,319.85 over 1,000 episodes. The key driver is network capacity: the [256, 128, 64] " +
+    "policy backbone provides sufficient representational power to encode the compositional " +
+    "navigation\u2013detection\u2013transmission task structure. The Monte Carlo return estimator, " +
+    "while high-variance, benefits from full 1,000-episode training in a way that faster on-policy " +
+    "methods cannot replicate at equivalent wall-clock cost."
   ),
   p(
-    "PPO substantially outperforms DQN, achieving a best last-20 mean of +578.81 (ppo_wide_clip) " +
-    "with individual episodes reaching +1,892.42 (ppo_high_entropy). The wide clipping range " +
-    "(\u03B5=0.3) is the dominant factor, enabling decisive policy updates when the agent discovers " +
-    "productive approach trajectories. PPO\u2019s native MultiDiscrete support preserves action-space " +
-    "structure, contributing to faster learning than DQN\u2019s flattened representation."
+    "PPO ranks second with a best final mean of +364.73 (ppo_tight_clip) over ~100\u2013138 episodes. " +
+    "Its native MultiDiscrete support preserves compositional action structure, and conservative " +
+    "policy clipping (\u03B5=0.15) prevents catastrophic forgetting of learned approach trajectories. " +
+    "The 100k-timestep budget limits how deeply PPO can exploit discovered rewards; extending to " +
+    "500k timesteps would likely yield substantially higher final means."
   ),
   p(
-    "REINFORCE performs worst in terms of mean reward (\u221274.2 best) and stability. Monte Carlo " +
-    "return estimation in a 10,000-step horizon environment introduces prohibitively high gradient " +
-    "variance. Baseline subtraction is essential but insufficient on its own; the algorithm would " +
-    "benefit substantially from actor-critic extensions (e.g., A2C) that use bootstrapped value " +
-    "estimates rather than full episode returns."
+    "DQN ranks last with a best final mean of \u221250.29 (dqn_large_buffer), never reaching positive " +
+    "territory. Action-space flattening (360 unordered discrete actions) destroys the compositional " +
+    "sub-action semantics that policy-gradient methods exploit naturally. The 300k replay buffer and " +
+    "PER are the most effective hyperparameters, but cannot compensate for the fundamental structural " +
+    "mismatch between DQN\u2019s Q-function formulation and the MultiDiscrete action space."
   ),
   p("Recommendations for future work:"),
   bullet(
@@ -744,9 +788,13 @@ children.push(
   p(
     "AstroLogic demonstrates that even moderately complex custom RL environments expose significant " +
     "algorithmic differences. The combination of dense shaping with sparse biosignature rewards, " +
-    "constrained resources, and a large joint action space creates a benchmark that meaningfully " +
-    "differentiates DQN, PPO, and REINFORCE \u2014 providing a strong foundation for future research " +
-    "in autonomous space systems."
+    "constrained resources, and a large compositional joint action space creates a benchmark that " +
+    "meaningfully differentiates DQN, PPO, and REINFORCE \u2014 providing a strong foundation for " +
+    "future research in autonomous space systems. The unexpected dominance of REINFORCE at the " +
+    "1,000-episode scale \u2014 achieving +1,319.85 vs PPO\u2019s +364.73 and DQN\u2019s \u221250.29 " +
+    "\u2014 highlights the importance of training budget alignment when comparing RL algorithms: " +
+    "per-episode gradient updates give REINFORCE a data-efficiency advantage not captured by " +
+    "timestep-normalised comparisons."
   ),
   pEmpty(),
   pEmpty(),

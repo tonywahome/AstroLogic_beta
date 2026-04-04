@@ -1,12 +1,16 @@
 """Compare all trained models and generate comparison plots.
 
-Reads training logs from results/logs/ and generates:
-1. Learning curves per algorithm (2x2 grid)
+Reads training artifacts from the current repo layout:
+- DQN logs: models/dqn/<run_name>/logs
+- PPO logs: models/pg/<run_name>/logs
+- REINFORCE rewards: models/pg/<run_name>/rewards.csv
+
+Generates:
+1. Learning curves per algorithm
 2. Best-run comparison overlay
 3. Final performance bar chart
-4. Biosignature discovery rate
-5. Training efficiency scatter
-6. Summary CSV table
+4. Training efficiency scatter
+5. Summary CSV table
 
 Usage:
     python evaluation/compare_models.py
@@ -24,12 +28,12 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("Agg")
 
-from training.hyperparams import (
-    DQN_CONFIGS, PPO_CONFIGS, REINFORCE_CONFIGS,
-)
+from training.dqn_training import DQN_CONFIGS
+from training.pg_training import PPO_CONFIGS, REINFORCE_CONFIGS
 
 RESULTS_DIR = "results"
 PLOTS_DIR = "results/plots"
+MODELS_DIR = "models"
 ALGORITHM_COLORS = {
     "DQN": "#e74c3c",
     "PPO": "#2ecc71",
@@ -37,8 +41,34 @@ ALGORITHM_COLORS = {
 }
 
 
+def get_run_dir(algo_name: str, run_name: str) -> str:
+    """Return run directory using current layout, with legacy fallback."""
+    if algo_name == "DQN":
+        primary = os.path.join(MODELS_DIR, "dqn", run_name)
+    else:
+        primary = os.path.join(MODELS_DIR, "pg", run_name)
+
+    if os.path.isdir(primary):
+        return primary
+
+    # Legacy fallback for older snapshots
+    legacy = os.path.join(RESULTS_DIR, "models", run_name)
+    return legacy
+
+
+def get_log_dir(algo_name: str, run_name: str) -> str:
+    """Return monitor log directory using current layout, with legacy fallback."""
+    primary = os.path.join(get_run_dir(algo_name, run_name), "logs")
+    if os.path.isdir(primary):
+        return primary
+    return os.path.join(RESULTS_DIR, "logs", run_name)
+
+
 def load_monitor_data(log_dir: str) -> pd.DataFrame | None:
     """Load SB3 Monitor CSV data from a log directory."""
+    if not os.path.isdir(log_dir):
+        return None
+
     csv_path = os.path.join(log_dir, "monitor.csv")
     if not os.path.exists(csv_path):
         # Try finding any .monitor.csv file
@@ -60,6 +90,9 @@ def load_monitor_data(log_dir: str) -> pd.DataFrame | None:
 
 def load_reinforce_data(model_dir: str) -> pd.DataFrame | None:
     """Load REINFORCE training rewards CSV."""
+    if not os.path.isdir(model_dir):
+        return None
+
     csv_path = os.path.join(model_dir, "rewards.csv")
     if not os.path.exists(csv_path):
         return None
@@ -98,9 +131,9 @@ def plot_learning_curves():
         for i, config in enumerate(configs):
             run_name = config["name"]
             if algo_name == "REINFORCE":
-                df = load_reinforce_data(f"results/models/{run_name}")
+                df = load_reinforce_data(get_run_dir(algo_name, run_name))
             else:
-                df = load_monitor_data(f"results/logs/{run_name}")
+                df = load_monitor_data(get_log_dir(algo_name, run_name))
 
             if df is not None and "reward" in df.columns:
                 rewards = df["reward"].values
@@ -137,9 +170,9 @@ def plot_best_comparison():
         for config in configs:
             run_name = config["name"]
             if algo_name == "REINFORCE":
-                df = load_reinforce_data(f"results/models/{run_name}")
+                df = load_reinforce_data(get_run_dir(algo_name, run_name))
             else:
-                df = load_monitor_data(f"results/logs/{run_name}")
+                df = load_monitor_data(get_log_dir(algo_name, run_name))
 
             if df is not None and "reward" in df.columns:
                 mean_reward = df["reward"].tail(100).mean()
@@ -175,9 +208,9 @@ def plot_final_performance():
         for config in configs:
             run_name = config["name"]
             if algo_name == "REINFORCE":
-                df = load_reinforce_data(f"results/models/{run_name}")
+                df = load_reinforce_data(get_run_dir(algo_name, run_name))
             else:
-                df = load_monitor_data(f"results/logs/{run_name}")
+                df = load_monitor_data(get_log_dir(algo_name, run_name))
 
             if df is not None and "reward" in df.columns:
                 final_mean = df["reward"].tail(50).mean()
@@ -215,38 +248,37 @@ def plot_final_performance():
 
 def plot_training_efficiency():
     """Plot 5: Training efficiency scatter (wall time vs reward)."""
-    # Load experiment index
-    index_path = os.path.join(RESULTS_DIR, "experiment_index.json")
-    if not os.path.exists(index_path):
-        print("  Skipped: training_efficiency.png (no experiment_index.json)")
+    summary_path = os.path.join(RESULTS_DIR, "final_summary.csv")
+    if not os.path.exists(summary_path):
+        print("  Skipped: training_efficiency.png (no final_summary.csv)")
         return
 
-    with open(index_path) as f:
-        index = json.load(f)
+    try:
+        summary_df = pd.read_csv(summary_path)
+    except Exception:
+        print("  Skipped: training_efficiency.png (failed to read final_summary.csv)")
+        return
+
+    if "wall_time_s" not in summary_df.columns:
+        print("  Skipped: training_efficiency.png (missing wall_time_s column)")
+        return
 
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_title("Training Efficiency: Wall Time vs Final Reward", fontsize=14, fontweight="bold")
     ax.set_xlabel("Wall Clock Time (seconds)")
     ax.set_ylabel("Final Mean Reward")
 
-    for result in index.get("results", []):
-        if result.get("status") != "completed":
+    for _, row in summary_df.iterrows():
+        algo = str(row.get("algorithm", "")).upper()
+        wall_time = row.get("wall_time_s", np.nan)
+        final_reward = row.get("final_mean_reward", np.nan)
+
+        if pd.isna(wall_time) or pd.isna(final_reward):
             continue
-        algo = result.get("algorithm", "")
-        wall_time = result.get("wall_time", 0)
-        run_name = result.get("run_name", "")
 
-        # Load final reward
-        if algo == "REINFORCE":
-            df = load_reinforce_data(f"results/models/{run_name}")
-        else:
-            df = load_monitor_data(f"results/logs/{run_name}")
-
-        if df is not None and "reward" in df.columns:
-            final_reward = df["reward"].tail(50).mean()
-            color = ALGORITHM_COLORS.get(algo, "gray")
-            ax.scatter(wall_time, final_reward, color=color, s=60, alpha=0.7,
-                       label=algo if algo not in ax.get_legend_handles_labels()[1] else "")
+        color = ALGORITHM_COLORS.get(algo, "gray")
+        ax.scatter(float(wall_time), float(final_reward), color=color, s=60, alpha=0.7,
+                   label=algo if algo not in ax.get_legend_handles_labels()[1] else "")
 
     ax.legend()
     ax.grid(True, alpha=0.3)
@@ -266,9 +298,9 @@ def generate_summary_table():
         for config in configs:
             run_name = config["name"]
             if algo_name == "REINFORCE":
-                df = load_reinforce_data(f"results/models/{run_name}")
+                df = load_reinforce_data(get_run_dir(algo_name, run_name))
             else:
-                df = load_monitor_data(f"results/logs/{run_name}")
+                df = load_monitor_data(get_log_dir(algo_name, run_name))
 
             row = {
                 "algorithm": algo_name,

@@ -1,129 +1,132 @@
-# AstroLogic Beta - Reinforcement Learning for Astrobiological Exploration
+# AstroLogic - Reinforcement Learning for Astrobiological Exploration
 
-A reinforcement learning framework where a spacecraft navigates a simulated solar system to detect biosignatures on Mars, Europa, and Enceladus. Compares RL algorithms: **DQN**, **REINFORCE**, and **PPO**.
+AstroLogic trains a spacecraft agent to navigate a simulated solar system and detect/transmit biosignatures from Mars, Europa, and Enceladus. The project compares **DQN**, **PPO**, and **REINFORCE** under 10 hyperparameter variants each (30 total runs).
 
 ## Project Structure
 
 ```
 AstroLogic_beta/
-├── astro_env/              # Custom Gymnasium environment (Python)
-├── agents/                 # Random agent demo + custom REINFORCE
-├── training/               # SB3 training scripts + hyperparameter configs
-├── evaluation/             # Comparison plots, evaluation, environment diagram
-├── visualization/          # Pygame rendering layer
-└── results/                # Training outputs (logs, models, plots, diagrams)
+├── environment/           # Gymnasium env registration + AstroExplorationEnv
+├── agents/                # Random agent + reusable REINFORCE policy module
+├── training/              # dqn_training.py and pg_training.py (PPO/REINFORCE)
+├── evaluation/            # evaluate_agent.py, compare_models.py, diagrams
+├── visualization/         # Pygame renderer and UI overlay
+├── models/
+│   ├── dqn/               # 10 DQN runs (models + logs + tb)
+│   └── pg/                # 10 PPO + 10 REINFORCE runs
+├── results/
+│   ├── final_summary.csv
+│   ├── diagrams/
+│   └── plots/
+├── run_with_render.py     # Foreground renderer for trained checkpoints
+└── training_process.ipynb # End-to-end training/comparison notebook
 ```
 
 ## Environment: AstroExploration-v0
 
 ### MDP Specification
 
-| Component       | Details                                                                                                       |
-| --------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Observation** | 23-dim continuous vector: position, velocity, target headings/distances, fuel, battery, SNR, mission progress |
-| **Action**      | MultiDiscrete [5,3,3,3,4,2]: thrust, pitch, yaw, roll, instrument, communication                              |
-| **Start State** | Earth orbit (1 AU), fuel=100%, battery=100%                                                                   |
-| **Success**     | Detect and transmit 3 distinct biosignatures                                                                  |
-| **Terminal**    | Success, resource depletion, collision, out-of-bounds (>50 AU), 100K steps                                    |
+| Component | Current Definition |
+| --- | --- |
+| **Observation** | 26-d continuous vector (position, velocity, target distances/headings, fuel, battery, SNR, mission progress, yaw, sun distance, active instrument) |
+| **Action** | MultiDiscrete `[5, 3, 3, 4, 2]`: thrust, pitch, yaw, instrument, communication |
+| **DQN Wrapper** | `FlattenMultiDiscreteToDiscrete` maps action space to `Discrete(360)` |
+| **Start State** | Earth orbit with initialized orbital velocity, fuel=1.0, battery=1.0 |
+| **Success** | Transmit 3 unique biosignatures |
+| **Terminal** | Success, collision, out-of-bounds, resource depletion, or max episode steps |
 
-### Rewards
+### Rewards (Current Shaping)
 
-| Event                 | Reward                   |
-| --------------------- | ------------------------ |
-| Liquid Water          | +500                     |
-| Ice                   | +300                     |
-| Organic Compounds     | +750                     |
-| Signs of Intelligence | +5000                    |
-| Step Penalty (dense)  | -(fuel_cost + time_cost) |
-| Collision/Failure     | -1000                    |
+`RewardCalculator` combines sparse mission rewards with dense shaping:
+
+| Event / Signal | Reward |
+| --- | --- |
+| Detect liquid water | +500 |
+| Detect ice | +300 |
+| Detect organic compounds | +750 |
+| Detect signs of intelligence | +5000 |
+| New transmission (per biosignature) | +200 |
+| Orbital insertion bonus | +100 |
+| Approach delta shaping | `max(0, approach_delta) * 5.0` |
+| Heading alignment shaping | `max(0, heading_alignment) * 1.5` |
+| Fuel penalty | `-0.001 * fuel_used` |
+| Time penalty | `-0.0001` per step |
+| Collision / out-of-bounds | -100 |
 
 ### Target Bodies & Biosignatures
 
-- **Mars**: ice, organic compounds
-- **Europa** (moon of Jupiter): liquid water, organic compounds
-- **Enceladus** (moon of Saturn): liquid water, ice, signs of intelligence
+- **Mars**: ice, organic_compounds
+- **Europa**: liquid_water, organic_compounds
+- **Enceladus**: liquid_water, ice, signs_of_intelligence
 
 ## Setup
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
 
-# Verify environment
-python -c "import astro_env; import gymnasium; env = gymnasium.make('AstroExploration-v0'); print(env.reset()[0].shape)"
+# Verify environment registration
+python -c "import environment, gymnasium as gym; env = gym.make('AstroExploration-v0'); print(env.observation_space.shape, env.action_space.nvec); env.close()"
 ```
 
 ## Usage
 
-### 1. Random Agent Demo (no training)
+### Train Single Configurations
 
 ```bash
-# Pygame visualization
-python -m agents.random_agent
+# DQN config index 0-9
+python training/dqn_training.py --run 0 --seed 42
+
+# PPO config index 0-9
+python training/pg_training.py --algo ppo --run 0 --seed 42
+
+# REINFORCE config index 0-9
+python training/pg_training.py --algo reinforce --run 0 --seed 42
 ```
 
-### 2. Train Individual Algorithms
+### Evaluate / Render Trained Models
 
 ```bash
-# Train a single config (index 0-9)
-python training/train_ppo.py --run 0
-python training/train_dqn.py --run 0
-python training/train_reinforce.py --run 0
+# Headless evaluation
+python evaluation/evaluate_agent.py --model models/dqn/dqn_baseline/final_model.zip --algorithm DQN --episodes 10
+
+# Rendered run
+python evaluation/evaluate_agent.py --model models/pg/ppo_baseline/final_model.zip --algorithm PPO --episodes 1 --render
+
+# Render with compatibility handling for older REINFORCE checkpoints
+python evaluation/evaluate_agent.py --model models/pg/reinforce_deep_net/policy.pt --algorithm REINFORCE --episodes 1 --render
 ```
 
-### 3. Run All 30 Experiments
+### Run Foreground Renderer Helper
 
 ```bash
-# Run everything (30 experiments total)
-python training/run_all_experiments.py
-
-# Or filter by algorithm
-python training/run_all_experiments.py --algorithm ppo
-python training/run_all_experiments.py --algorithm dqn --start 0 --end 5
+python run_with_render.py --model models/pg/ppo_baseline/final_model.zip --algorithm PPO --episodes 3
 ```
 
-### 4. Evaluate Trained Models
+## Model Comparison (Current Repo State)
 
-```bash
-python evaluation/evaluate_agent.py --model results/models/ppo_baseline/final_model --algorithm PPO --episodes 10
-python evaluation/evaluate_agent.py --model results/models/reinforce_baseline/policy.pt --algorithm REINFORCE
-```
+All three algorithms have 10 configured runs. The current training/evaluation code emphasizes:
 
-### 5. Generate Comparison Plots
+- **DQN**: value-based learning with flattened discrete action space and prioritized replay when `sb3-contrib` is available.
+- **PPO**: stable policy optimization over native MultiDiscrete control.
+- **REINFORCE**: custom multi-head policy gradient with baseline variants (`none`, `mean`, `running`).
 
-```bash
-python evaluation/compare_models.py
-```
+Based on `results/final_summary.csv` in this repo snapshot:
 
-### 6. Generate Environment Diagram
-
-```bash
-python evaluation/generate_diagram.py
-```
-
-## Algorithm Comparison
-
-| Algorithm     | Type                 | Key Behavior                                                                   |
-| ------------- | -------------------- | ------------------------------------------------------------------------------ |
-| **DQN**       | Value-Based          | Uses Discrete(1080) wrapper; good at discrete decisions (instrument selection) |
-| **REINFORCE** | Policy Gradient      | Custom PyTorch implementation; high variance but learns full trajectories      |
-| **PPO**       | Proximal Policy Opt. | Most stable for continuous 3D navigation; handles MultiDiscrete natively       |
-
-### Hyperparameter Tuning
-
-Each algorithm has 10 configurations varying:
-
-- Learning rate, network architecture, discount factor
-- Algorithm-specific: buffer size (DQN), clip range (PPO), baseline method (REINFORCE)
-
-Total: **30 experiment runs** with results logged for comparison.
+- Top run overall: **reinforce_deep_net** (`final_mean_reward` 1319.85)
+- Strong REINFORCE variants: `reinforce_large_net`, `reinforce_very_low_gamma`, `reinforce_running_baseline`
+- Best PPO variants: `ppo_tight_clip`, `ppo_wide_clip`, `ppo_baseline`
+- DQN runs in this snapshot trend lower on `final_mean_reward` than PPO/REINFORCE
 
 ## Results
 
-After running experiments, outputs are in:
+Current outputs are organized as:
 
-- `results/logs/` - Training logs (Monitor CSV + TensorBoard)
-- `results/models/` - Saved model checkpoints
-- `results/plots/` - Comparison visualizations
-- `results/diagrams/` - Environment interaction diagram
-- `results/comparison_summary.csv` - Full results table
+- `models/dqn/<run_name>/`:
+	- `final_model.zip`, `best_model.zip`, `logs/`, `tb/`
+- `models/pg/<run_name>/`:
+	- PPO runs: `final_model.zip`, `best_model.zip`, `logs/`, `tb/`
+	- REINFORCE runs: `policy.pt`, `final_model.pt`, `rewards.csv`
+- `results/final_summary.csv`: consolidated cross-algorithm summary
+- `results/diagrams/` and `results/plots/`: exported visuals
+
+Note: some legacy scripts in `evaluation/compare_models.py` still reference `results/logs` and `results/models`; the current trained artifacts are under `models/dqn` and `models/pg`.

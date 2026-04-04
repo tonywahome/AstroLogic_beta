@@ -17,6 +17,24 @@ import environment  # noqa: F401
 from environment.custom_env import FlattenMultiDiscreteToDiscrete
 
 
+def _infer_reinforce_policy_config(state_dict: dict) -> tuple[int, list[int], list[int]]:
+    """Infer obs_dim, action_nvec, and hidden_sizes from a saved REINFORCE checkpoint."""
+    backbone_weight_keys = sorted(
+        (key for key in state_dict if key.startswith("backbone.") and key.endswith(".weight")),
+        key=lambda key: int(key.split(".")[1]),
+    )
+    hidden_sizes = [state_dict[key].shape[0] for key in backbone_weight_keys]
+    obs_dim = state_dict[backbone_weight_keys[0]].shape[1]
+
+    head_weight_keys = sorted(
+        (key for key in state_dict if key.startswith("heads.") and key.endswith(".weight")),
+        key=lambda key: int(key.split(".")[1]),
+    )
+    action_nvec = [state_dict[key].shape[0] for key in head_weight_keys]
+
+    return obs_dim, action_nvec, hidden_sizes
+
+
 def run_sb3_model(model_path: str, algorithm: str, n_episodes: int = 5):
     """Run an SB3 model (DQN or PPO) with rendering."""
     print(f"\nLoading {algorithm} model from: {model_path}")
@@ -66,12 +84,15 @@ def run_reinforce_model(model_path: str, n_episodes: int = 5,
     # Initialize environment with rendering
     env = gym.make("AstroExploration-v0", render_mode="human")
 
+    state_dict = torch.load(model_path, weights_only=True)
+    obs_dim, action_nvec, inferred_hidden_sizes = _infer_reinforce_policy_config(state_dict)
+
     policy = REINFORCEPolicy(
-        obs_dim=23,
-        action_nvec=[5, 3, 3, 3, 4, 2],
-        hidden_sizes=hidden_sizes or [128, 64],
+        obs_dim=obs_dim,
+        action_nvec=action_nvec,
+        hidden_sizes=hidden_sizes or inferred_hidden_sizes,
     )
-    policy.load_state_dict(torch.load(model_path, weights_only=True))
+    policy.load_state_dict(state_dict)
     policy.eval()
 
     print(f"Running {n_episodes} episodes with rendering...\n")
