@@ -111,7 +111,7 @@ def generate_diagram():
     ax.add_patch(obs_box)
     ax.text(1.45, 8.2, "Observation Space", ha="center", va="center",
             fontsize=10, fontweight="bold", color="#2980b9")
-    ax.text(1.45, 7.85, "Box(23,) float32", ha="center", fontsize=8, color="#555")
+    ax.text(1.45, 7.85, "Box(26,) float32", ha="center", fontsize=8, color="#555")
 
     obs_items = [
         "[0:3]  Position (x,y,z) AU",
@@ -127,9 +127,12 @@ def generate_diagram():
         "[20]   SNR Signal",
         "[21]   Biosigs Found/3",
         "[22]   Biosigs TX/3",
+        "[23]   Yaw / pi",
+        "[24]   Dist. to Sun",
+        "[25]   Instrument/3",
     ]
     for i, item in enumerate(obs_items):
-        ax.text(0.4, 7.5 - i * 0.27, item, fontsize=6, color="#333",
+        ax.text(0.4, 7.5 - i * 0.22, item, fontsize=5.8, color="#333",
                 fontfamily="monospace")
 
     # ============================================================
@@ -140,7 +143,8 @@ def generate_diagram():
     ax.add_patch(act_box)
     ax.text(16.55, 8.2, "Action Space", ha="center", va="center",
             fontsize=10, fontweight="bold", color="#e67e22")
-    ax.text(16.55, 7.85, "MultiDiscrete [5,3,3,3,4,2]", ha="center", fontsize=8, color="#555")
+    ax.text(16.55, 7.85, "MultiDiscrete [5,3,3,4,2]", ha="center", fontsize=8, color="#555")
+    ax.text(16.55, 7.6, "= 360 joint actions", ha="center", fontsize=7, color="#888")
 
     act_items = [
         "[0] Thrust (5 levels)",
@@ -149,47 +153,49 @@ def generate_diagram():
         "    {-5, 0, +5} degrees",
         "[2] Yaw (3 levels)",
         "    {-5, 0, +5} degrees",
-        "[3] Roll (3 levels)",
-        "    {-5, 0, +5} degrees",
-        "[4] Instrument (4 options)",
+        "[3] Instrument (4 options)",
         "    None/Spectro/Thermal/Drill",
-        "[5] Communication (2)",
+        "[4] Communication (2)",
         "    {Off, Transmit}",
     ]
     for i, item in enumerate(act_items):
-        ax.text(15.5, 7.5 - i * 0.28, item, fontsize=6, color="#333",
+        ax.text(15.5, 7.5 - i * 0.27, item, fontsize=6, color="#333",
                 fontfamily="monospace")
 
     # ============================================================
     # REWARD TABLE (bottom center)
     # ============================================================
-    rew_box = FancyBboxPatch((3.5, 0.3), 11, 3.2, boxstyle="round,pad=0.1",
+    rew_box = FancyBboxPatch((2.5, 0.1), 13, 3.6, boxstyle="round,pad=0.1",
                               facecolor="#f5f5f5", edgecolor="#27ae60", linewidth=1.5)
     ax.add_patch(rew_box)
-    ax.text(9, 3.2, "Reward Structure R(s, a, s')", ha="center", va="center",
+    ax.text(9, 3.45, "Reward Structure R(s, a, s')", ha="center", va="center",
             fontsize=11, fontweight="bold", color="#27ae60")
 
     # Reward table headers
-    col_x = [4.5, 7.5, 9.5, 12]
+    col_x = [3.2, 6.8, 9.2, 11.5]
     headers = ["Event", "Value", "Type", "Trigger"]
     for x, h in zip(col_x, headers):
-        ax.text(x, 2.85, h, fontsize=8, fontweight="bold", color="#333")
+        ax.text(x, 3.15, h, fontsize=8, fontweight="bold", color="#333")
 
     rewards_data = [
         ("Liquid Water", "+500", "Sparse", "Instrument detects in zone"),
         ("Ice Detection", "+300", "Sparse", "Instrument detects in zone"),
         ("Organic Compounds", "+750", "Sparse", "Instrument detects in zone"),
         ("Signs of Intelligence", "+5000", "Sparse", "Instrument detects in zone"),
+        ("Biosig Transmitted", "+200 each", "Sparse", "Comm=Transmit in zone"),
         ("Orbital Insertion", "+100", "Sparse", "Close + slow near target"),
-        ("Step Penalty", "-(a*fuel+b)", "Dense", "Every timestep"),
-        ("Collision/OOB", "-1000", "Terminal", "Body collision or >50 AU"),
+        ("Approach Shaping", "delta_d x5.0", "Dense", "Progress toward target"),
+        ("Heading Alignment", "dot_prod x1.5", "Dense", "Nose pointing to target"),
+        ("Fuel Penalty", "-0.001 x fuel", "Dense", "Every timestep"),
+        ("Time Penalty", "-0.0001", "Dense", "Every timestep"),
+        ("Collision/OOB", "-100", "Terminal", "Body collision or >50 AU"),
     ]
     for i, (event, value, rtype, trigger) in enumerate(rewards_data):
-        y = 2.55 - i * 0.3
+        y = 2.88 - i * 0.255
         color = "#27ae60" if "+" in value else "#e74c3c"
-        ax.text(col_x[0], y, event, fontsize=7, color="#333")
-        ax.text(col_x[1], y, value, fontsize=7, color=color, fontweight="bold")
-        ax.text(col_x[2], y, rtype, fontsize=7, color="#555")
+        ax.text(col_x[0], y, event, fontsize=6.5, color="#333")
+        ax.text(col_x[1], y, value, fontsize=6.5, color=color, fontweight="bold")
+        ax.text(col_x[2], y, rtype, fontsize=6.5, color="#555")
         ax.text(col_x[3], y, trigger, fontsize=6, color="#777")
 
     # ============================================================
@@ -208,7 +214,7 @@ def generate_diagram():
             fontweight="bold", color="#2980b9", rotation=50)
 
     # Terminal conditions annotation
-    ax.text(9, 4.2, "Terminal: Success (3 biosigs TX) | Resources=0 | Collision | OOB | 100K steps",
+    ax.text(9, 4.2, "Terminal: Success (3 biosigs TX) | Fuel=0 or Battery=0 | Collision | OOB (>50 AU) | 10,000 steps",
             ha="center", fontsize=7, color="#999", style="italic")
 
     # Save

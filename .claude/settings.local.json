@@ -25,7 +25,9 @@
       "Bash(python \"C:\\\\Users\\\\LENOVO\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\32e060f9-cb73-4e86-ad1f-6f1635059942\\\\1539f1fb-8c68-4cba-9e0d-cbb8bbd110fc\\\\skills\\\\docx\\\\scripts\\\\office\\\\validate.py\" AstroLogic_Report.docx)",
       "Bash(python \"C:\\\\Users\\\\LENOVO\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\32e060f9-cb73-4e86-ad1f-6f1635059942\\\\1539f1fb-8c68-4cba-9e0d-cbb8bbd110fc\\\\skills\\\\docx\\\\scripts\\\\office\\\\validate.py\" \"C:\\\\Users\\\\LENOVO\\\\Desktop\\\\summative_rl\\\\AstroLogic_beta\\\\AstroLogic_Report.docx\")",
       "Bash(python -c \"import os; [print\\(f\\) for f in os.walk\\(r''''C:\\\\tmp\\\\report_unpacked''''\\)]\")",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(find /c/Users/LENOVO/Desktop/summative_rl/AstroLogic_beta -maxdepth 2 -name *diagram* -o -name *visuali* -o -name *render* -o -name *plot*)",
+      "Bash(python evaluation/generate_diagram.py)"
     ]
   }
 }
